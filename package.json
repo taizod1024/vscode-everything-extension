@@ -17,33 +17,10 @@
   "contributes": {
     "commands": [
       {
-        "command": "everything-search.runCmd",
-        "title": "Run Cmd as Admin"
+        "command": "everything-search.search",
+        "title": "Everything: Search"
       }
-    ],
-    "menus": {
-      "commandPalette": [
-        {
-          "command": "everything-search.runCmd",
-          "when": "false"
-        },
-        {
-          "command": "everything-search.runPowerShell",
-          "when": "false"
-        }
-      ],
-      "explorer/context": [
-        {
-          "command": "everything-search.runCmd",
-          "group": "everything-search"
-        },
-        {
-          "command": "everything-search.runPowerShell",
-          "group": "everything-search"
-        }
-      ]
-    },
-    "keybindings": []
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run esbuild-base -- --minify",

@@ -1,112 +1,82 @@
 import * as vscode from "vscode";
-import * as fs from "fs";
-const path = require("path");
-import child_process, { ExecFileSyncOptions } from "child_process";
 
 /** everything-search-extesnion class */
 class EverythingSearch {
   /** application id for vscode */
-  public appId = "everything-search";
+  public readonly appId = "everything-search";
 
   /** application name */
-  public appName = "Run Shell As Admin";
+  public readonly appName = "Everything Search";
 
   /** channel on vscode */
-  public channel: vscode.OutputChannel;
-
-  /** project path */
-  public projectPath: string;
-
-  /** app path */
-  public appPath: string;
-
-  /** extension path */
-  public extensionPath: string;
+  public readonly channel: vscode.OutputChannel;
 
   /** constructor */
-  constructor() {}
+  constructor() {
+    this.channel = vscode.window.createOutputChannel(this.appName, { log: true });
+    this.channel.show(true);
+    this.channel.appendLine(`${this.appName}`);
+  }
 
   /** activate extension */
   public activate(context: vscode.ExtensionContext) {
-    // init context
-    this.channel = vscode.window.createOutputChannel(this.appName, { log: true });
-    if (!process.env.WINDIR) {
-      this.channel.appendLine(`${this.appId} failed, no windir`);
-      return;
-    }
-    this.channel.appendLine(`${this.appId} activated`);
+    let cmdname = "";
 
-    // init vscode
+    // init command
+    cmdname = `${this.appId}.search`;
     context.subscriptions.push(
-      vscode.commands.registerCommand(`${this.appId}.runCmd`, async (uri: vscode.Uri) => {
-        this.extensionPath = context.extensionPath;
+      vscode.commands.registerCommand(`${cmdname}`, async () => {
         try {
-          const stats = fs.statSync(uri.fsPath);
-          if (stats.isDirectory()) {
-            await this.runCmdAsync(uri.fsPath);
-          } else if (stats.isFile()) {
-            await this.runCmdAsync(path.dirname(uri.fsPath));
-          }
+          await this.search();
         } catch (reason) {
           this.channel.show();
-          EverythingSearch.channel.appendLine("**** " + reason + " ****");
-        }
-      })
-    );
-
-    context.subscriptions.push(
-      vscode.commands.registerCommand(`${this.appId}.runPowerShell`, async (uri: vscode.Uri) => {
-        this.extensionPath = context.extensionPath;
-        try {
-          const stats = fs.statSync(uri.fsPath);
-          if (stats.isDirectory()) {
-            await this.runPowerShellAsync(uri.fsPath);
-          } else if (stats.isFile()) {
-            await this.runPowerShellAsync(path.dirname(uri.fsPath));
-          }
-        } catch (reason) {
-          this.channel.show();
-          EverythingSearch.channel.appendLine("**** " + reason + " ****");
+          everythingsearch.channel.appendLine("**** " + reason + " ****");
         }
       })
     );
   }
 
-  /** run cmd async */
-  public async runCmdAsync(dir: string) {
-    // show channel
-    this.channel.appendLine(`--------`);
-    this.channel.appendLine(`runCmdAsync:`);
-    this.channel.appendLine(`dir=${dir}`);
+  /** search any */
+  private async search() {
+    this.channel.appendLine(`search:`);
 
-    // exec command as administrator
-    let cmd = `powershell -command start-process 'cmd.exe' -ArgumentList '/k "cd /d ${dir}"' -verb runas`;
-    this.channel.appendLine(`command=${cmd}`);
-    this.execCommand(cmd);
-  }
+    // quickpick
+    const quickPick = vscode.window.createQuickPick();
+    quickPick.placeholder = "Type to search files...";
 
-  /** run powershell async */
-  public async runPowerShellAsync(dir: string) {
-    // show channel
-    this.channel.appendLine(`--------`);
-    this.channel.appendLine(`runPowerShellAsync:`);
-    this.channel.appendLine(`dir=${dir}`);
+    // input handler
+    quickPick.onDidChangeValue(async value => {
+      this.channel.appendLine(`onDidChangeValue: ${value}`);
+      if (value.trim().length === 0) {
+        quickPick.items = [];
+        return;
+      }
 
-    // exec command as administrator
-    let cmd = `powershell -command start-process 'cmd.exe' -ArgumentList '/c "cd /d ${dir} && powershell"' -verb runas`;
-    this.channel.appendLine(`command=${cmd}`);
-    this.execCommand(cmd);
-  }
+      // Web APIを呼び出して結果を取得
+      const results = [value, value + "1", value + "2"];
 
-  /** execute command */
-  public execCommand(cmd: string, trim = true): string {
-    let text = null;
-    try {
-      const options = { cwd: this.projectPath };
-      text = child_process.execSync(cmd, options).toString();
-      if (trim) text = text.trim();
-    } catch (ex) {}
-    return text;
+      // QuickPickの候補を更新
+      quickPick.items = results.map(file => ({ label: file }));
+    });
+
+    // accept handler
+    quickPick.onDidAccept(() => {
+      this.channel.appendLine(`onDidAccept:`);
+      const selectedItem = quickPick.selectedItems[0];
+      if (selectedItem) {
+        this.channel.appendLine(`selected item: ${selectedItem.label}`);
+      }
+      quickPick.hide();
+    });
+
+    // dispose handler
+    quickPick.onDidHide(() => {
+      this.channel.appendLine(`onDidHide:`);
+      quickPick.dispose();
+    });
+
+    // show quickpick
+    quickPick.show();
   }
 }
 export const everythingsearch = new EverythingSearch();
