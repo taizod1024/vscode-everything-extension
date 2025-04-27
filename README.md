@@ -1,1 +1,1 @@
-# vscode-everything-extension
+# Everything Search
