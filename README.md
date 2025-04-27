@@ -1,1 +1,1 @@
-# Everything Search
+# Everything Extension

@@ -1,8 +1,8 @@
 {
   "version": "0.0.0",
-  "name": "everything-search",
-  "displayName": "Everything Search",
-  "description": "everything search extension for windows",
+  "name": "everything-extension",
+  "displayName": "Everything Extension",
+  "description": "everything extension for windows",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -17,8 +17,14 @@
   "contributes": {
     "commands": [
       {
-        "command": "everything-search.search",
+        "command": "everything-extension.search",
         "title": "Everything: Search"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "everything-extension.search",
+        "key": "ctrl+alt+l"
       }
     ]
   },
@@ -69,6 +75,7 @@
     }
   },
   "dependencies": {
-    "child_process": "^1.0.2"
+    "child_process": "^1.0.2",
+    "jsdom": "^26.1.0"
   }
 }

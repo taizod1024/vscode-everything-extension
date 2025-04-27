@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
-import { everythingsearch } from "./EverythingSearch";
+import { everythingextension } from "./EverythingExtension";
 
 // extension entrypoint
 export function activate(context: vscode.ExtensionContext) {
-  everythingsearch.activate(context);
+  everythingextension.activate(context);
 }
 export function deactivate() {}
