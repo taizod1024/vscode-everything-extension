@@ -26,6 +26,22 @@
         "command": "everything-extension.search",
         "key": "ctrl+alt+l"
       }
+    ],
+    "configuration": [
+      {
+        "properties": {
+          "everythingExtension.httpServerUrl": {
+            "type": "string",
+            "markdownDescription": "Everything HTTP Server URL",
+            "default": "http://localhost/"
+          },
+          "everythingExtension.debug": {
+            "type": "boolean",
+            "markdownDescription": "debug flag",
+            "default": false
+          }
+        }
+      }
     ]
   },
   "scripts": {
