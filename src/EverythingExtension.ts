@@ -45,10 +45,20 @@ class EverythingExtension {
 
   /** search any */
   private async search() {
-    // quickpick
+    // init quickpick
+    const config = vscode.workspace.getConfiguration(this.appCfgKey);
     const quickPick = vscode.window.createQuickPick();
     quickPick.placeholder = "Type to search ...";
-    quickPick.items = await this.searchEverything("");
+
+    // do search
+    try {
+      quickPick.items = await this.searchEverything("");
+    } catch (error) {
+      this.channel.show();
+      this.channel.appendLine(`error: ${error}, httpServerUrl=${config.httpServerUrl}`);
+      vscode.window.showErrorMessage(`An error occurred: ${error}, httpServerUrl=${config.httpServerUrl}`);
+      return;
+    }
 
     // input handler
     quickPick.onDidChangeValue(async value => {
@@ -56,7 +66,7 @@ class EverythingExtension {
         quickPick.items = await this.searchEverything(value);
       } catch (error) {
         this.channel.show();
-        this.channel.appendLine(`error: ${error}`);
+        this.channel.appendLine(`error: ${error}, httpServerUrl=${config.httpServerUrl}`);
         return;
       }
     });
@@ -72,10 +82,10 @@ class EverythingExtension {
           if (config.debug) {
             this.channel.appendLine(`debug: selected='${path}'`);
           }
-          if (type === "\\") {
-            vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(path), { forceNewWindow: true });
-          } else {
+          if (type !== "\\") {
             vscode.commands.executeCommand("vscode.open", vscode.Uri.file(path));
+          } else {
+            vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(path), { forceNewWindow: true });
           }
         }
         quickPick.hide();
