@@ -42,8 +42,9 @@ class EverythingExtension {
         try {
           await this.search();
         } catch (error) {
-          this.channel.show();
-          this.channel.appendLine(`error: ${error}`);
+          const msg = `error: ${error}`;
+          this.channel.appendLine(msg);
+          vscode.window.showErrorMessage(msg);
           return;
         }
       })
@@ -62,9 +63,9 @@ class EverythingExtension {
     try {
       quickPick.items = await this.searchEverything("");
     } catch (error) {
-      this.channel.show();
-      this.channel.appendLine(`error: ${error}, httpServerUrl=${config.httpServerUrl}`);
-      vscode.window.showErrorMessage(`An error occurred: ${error}, httpServerUrl=${config.httpServerUrl}`);
+      const msg = `error: ${error}, httpServerUrl=${config.httpServerUrl}`;
+      this.channel.appendLine(msg);
+      vscode.window.showErrorMessage(msg);
       return;
     }
 
@@ -74,8 +75,9 @@ class EverythingExtension {
         this.quickPickValue = value;
         quickPick.items = await this.searchEverything(value);
       } catch (error) {
-        this.channel.show();
-        this.channel.appendLine(`error: ${error}, httpServerUrl=${config.httpServerUrl}`);
+        const msg = `error: ${error}, httpServerUrl=${config.httpServerUrl}`;
+        this.channel.appendLine(msg);
+        vscode.window.showErrorMessage(msg);
         return;
       }
     });
@@ -100,8 +102,9 @@ class EverythingExtension {
         }
         quickPick.hide();
       } catch (error) {
-        this.channel.show();
-        this.channel.appendLine(`error: ${error}`);
+        const msg = `error: ${error}`;
+        this.channel.appendLine(msg);
+        vscode.window.showErrorMessage(msg);
         return;
       }
     });
