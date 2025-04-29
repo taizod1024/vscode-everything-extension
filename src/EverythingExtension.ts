@@ -4,33 +4,35 @@ const fs = require("fs");
 /** everything-search-extesnion class */
 class EverythingExtension {
   /** application id for vscode */
-  public readonly appId = "everything-extension";
+  private readonly appId = "everything-extension";
 
   /** application name */
-  public readonly appName = "Everything Extension";
+  private readonly appName = "Everything Extension";
 
   /** configuration key */
-  public readonly appCfgKey = "everythingExtension";
+  private readonly appCfgKey = "everythingExtension";
 
   /** channel on vscode */
-  public readonly channel: vscode.OutputChannel;
+  private readonly channel: vscode.OutputChannel;
 
   /** context */
-  public context: vscode.ExtensionContext;
-
-  /** quicipick value */
-  private quickPickValue: string = "";
+  private context: vscode.ExtensionContext;
 
   /** quickpick value name */
-  private readonly quickPickValueName = "quickPickValue";
+  private readonly quickPickValueKey = "quickPickValue";
 
+  /** sort order value name */
+  private readonly sortKey = "sort";
+
+  /** sort order array */
+  private readonly sortArray = ["sort=name&ascending=0", "sort=name&ascending=1", "sort=path&ascending=0", "sort=path&ascending=1", "sort=size&ascending=0", "sort=size&ascending=1", "sort=date&ascending=0", "sort=date&ascending=1"];
   /** constructor */
   constructor() {
     this.channel = vscode.window.createOutputChannel(this.appName, { log: true });
   }
 
   /** activate extension */
-  public activate(context: vscode.ExtensionContext) {
+  private activate(context: vscode.ExtensionContext) {
     this.context = context;
     this.channel.appendLine(`${this.appName}`);
     let cmdname = "";
@@ -57,7 +59,7 @@ class EverythingExtension {
     const config = vscode.workspace.getConfiguration(this.appCfgKey);
     const quickPick = vscode.window.createQuickPick();
     quickPick.placeholder = "Type to search ...";
-    quickPick.value = (await this.context.secrets.get(this.quickPickValueName)) || "";
+    quickPick.value = (await this.context.secrets.get(this.quickPickValueKey)) || "";
 
     // do search
     try {
@@ -72,7 +74,13 @@ class EverythingExtension {
     // input handler
     quickPick.onDidChangeValue(async value => {
       try {
-        this.quickPickValue = value;
+        if (value.match(/\*/g)) {
+          value = value.replace(/\*/g, "");
+          quickPick.value = value;
+          this.changeSortOrder();
+          return;
+        }
+        this.context.secrets.store(this.quickPickValueKey, quickPick.value || "");
         quickPick.items = await this.searchEverything(value);
       } catch (error) {
         const msg = `error: ${error}, httpServerUrl=${config.httpServerUrl}`;
@@ -86,8 +94,7 @@ class EverythingExtension {
     quickPick.onDidAccept(() => {
       try {
         const selectedItem = quickPick.selectedItems[0];
-        if (selectedItem) {
-          this.context.secrets.store(this.quickPickValueName, this.quickPickValue || "");
+        if (selectedItem && selectedItem.label.match(/[\\/]/)) {
           const path = selectedItem.label;
           const type = selectedItem.description;
           const config = vscode.workspace.getConfiguration(this.appCfgKey);
@@ -99,8 +106,8 @@ class EverythingExtension {
           } else {
             vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(path), { forceNewWindow: true });
           }
+          quickPick.hide();
         }
-        quickPick.hide();
       } catch (error) {
         const msg = `error: ${error}`;
         this.channel.appendLine(msg);
@@ -118,14 +125,16 @@ class EverythingExtension {
     var pattern1 = new RegExp('<p class="numresults">([^>]+)</p>', "g");
     var pattern2 = new RegExp('<img class="icon" src="/(file|folder).gif" alt="">([^>]+)</a>.*<nobr>([^>]+)</nobr></span></a></td>', "g");
     const config = vscode.workspace.getConfiguration(this.appCfgKey);
-    const url = new URL(`?sort=path&ascending=1&search=${encodeURIComponent(value)}`, config.httpServerUrl).toString();
+    const search = encodeURIComponent(value);
+    const sort = (await this.context.secrets.get(this.sortKey)) || "";
+    const url = new URL(`?search=${search}&${sort}`, config.httpServerUrl).toString();
     const response = await fetch(url);
     const html = await response.text();
     const results1 = html.matchAll(pattern1);
     const results2 = html.matchAll(pattern2);
     const array1 = Array.from(results1).map(result => {
       return {
-        label: result[1],
+        label: `${value}, result=${result[1].replace("　", "")}, ${sort.replace("&", ", ")}`,
         alwaysShow: true,
       };
     });
@@ -143,6 +152,13 @@ class EverythingExtension {
       this.channel.appendLine(`debug: value=${value}, url='${url}, count=${array.length}'`);
     }
     return array;
+  }
+
+  /** change sort */
+  private async changeSortOrder() {
+    const sort = (await this.context.secrets.get(this.sortKey)) || this.sortArray[0];
+    const newSort = this.sortArray[(this.sortArray.findIndex(item => item === sort) + 1) % this.sortArray.length];
+    this.context.secrets.store(this.sortKey, newSort || "");
   }
 }
 export const everythingextension = new EverythingExtension();
