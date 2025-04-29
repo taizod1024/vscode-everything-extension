@@ -1,7 +1,9 @@
 # Everything Extension
 
 Press `Ctrl + Alt + L` to quickly search for files and folders using [Everything](https://www.voidtools.com/).
-Please enable Everything's HTTP Server before using this extension.
+
+- Please enable Everything's HTTP Server before using this extension.
+- Press `*` to toggle the sorting order.
 
 ![ee01](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee01.png?raw=true)
 
