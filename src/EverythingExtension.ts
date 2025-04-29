@@ -1,9 +1,6 @@
 import * as vscode from "vscode";
 const fs = require("fs");
 
-// TODO 前回値保持
-// TODO 初回の遅さ
-
 /** everything-search-extesnion class */
 class EverythingExtension {
   /** application id for vscode */
@@ -18,6 +15,15 @@ class EverythingExtension {
   /** channel on vscode */
   public readonly channel: vscode.OutputChannel;
 
+  /** context */
+  public context: vscode.ExtensionContext;
+
+  /** quicipick value */
+  private quickPickValue: string = "";
+
+  /** quickpick value name */
+  private readonly quickPickValueName = "quickPickValue";
+
   /** constructor */
   constructor() {
     this.channel = vscode.window.createOutputChannel(this.appName, { log: true });
@@ -25,6 +31,7 @@ class EverythingExtension {
 
   /** activate extension */
   public activate(context: vscode.ExtensionContext) {
+    this.context = context;
     this.channel.appendLine(`${this.appName}`);
     let cmdname = "";
 
@@ -49,6 +56,7 @@ class EverythingExtension {
     const config = vscode.workspace.getConfiguration(this.appCfgKey);
     const quickPick = vscode.window.createQuickPick();
     quickPick.placeholder = "Type to search ...";
+    quickPick.value = (await this.context.secrets.get(this.quickPickValueName)) || "";
 
     // do search
     try {
@@ -63,6 +71,7 @@ class EverythingExtension {
     // input handler
     quickPick.onDidChangeValue(async value => {
       try {
+        this.quickPickValue = value;
         quickPick.items = await this.searchEverything(value);
       } catch (error) {
         this.channel.show();
@@ -76,6 +85,7 @@ class EverythingExtension {
       try {
         const selectedItem = quickPick.selectedItems[0];
         if (selectedItem) {
+          this.context.secrets.store(this.quickPickValueName, this.quickPickValue || "");
           const path = selectedItem.label;
           const type = selectedItem.description;
           const config = vscode.workspace.getConfiguration(this.appCfgKey);
