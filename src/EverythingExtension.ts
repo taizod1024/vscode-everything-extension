@@ -60,6 +60,17 @@ class EverythingExtension {
     const quickPick = vscode.window.createQuickPick();
     quickPick.placeholder = "Type to search ...";
 
+    // init search
+    quickPick.value = (await this.context.secrets.get(this.quickPickValueKey)) || "";
+    try {
+      quickPick.items = await this.searchEverything(quickPick.value);
+    } catch (error) {
+      const msg = `error: ${error}, httpServerUrl=${config.httpServerUrl}`;
+      this.channel.appendLine(msg);
+      vscode.window.showErrorMessage(msg);
+      return;
+    }
+
     // input handler
     quickPick.onDidChangeValue(async value => {
       try {
@@ -104,9 +115,6 @@ class EverythingExtension {
         return;
       }
     });
-
-    // do search
-    quickPick.value = (await this.context.secrets.get(this.quickPickValueKey)) || "";
 
     // show quickpick
     quickPick.show();
