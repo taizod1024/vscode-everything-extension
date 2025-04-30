@@ -149,7 +149,10 @@ class EverythingExtension {
   /** get sort */
   private async getSort(): Promise<string> {
     const sort = (await this.context.secrets.get(this.sortKey)) || this.sortArray[0];
-    this.channel.appendLine(`debug: sort= ${sort}`);
+    const config = vscode.workspace.getConfiguration(this.appCfgKey);
+    if (config.debug) {
+      this.channel.appendLine(`debug: sort= ${sort}`);
+    }
     return sort;
   }
 
@@ -158,7 +161,10 @@ class EverythingExtension {
     const sort = await this.getSort();
     const newSort = this.sortArray[(this.sortArray.findIndex(item => item === sort) + 1) % this.sortArray.length];
     await this.context.secrets.store(this.sortKey, newSort || "");
-    this.channel.appendLine(`debug: sort= ${sort} -> ${newSort} `);
+    const config = vscode.workspace.getConfiguration(this.appCfgKey);
+    if (config.debug) {
+      this.channel.appendLine(`debug: sort= ${sort} -> ${newSort} `);
+    }
   }
 }
 export const everythingextension = new EverythingExtension();
