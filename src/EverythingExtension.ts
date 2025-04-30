@@ -25,7 +25,7 @@ class EverythingExtension {
   private readonly sortKey = "sort";
 
   /** sort order array */
-  private readonly sortArray = ["sort=name&ascending=0", "sort=name&ascending=1", "sort=path&ascending=0", "sort=path&ascending=1", "sort=size&ascending=0", "sort=size&ascending=1", "sort=date&ascending=0", "sort=date&ascending=1"];
+  private readonly sortArray = ["sort=name&ascending=0", "sort=name&ascending=1", "sort=path&ascending=0", "sort=path&ascending=1", "sort=size&ascending=0", "sort=size&ascending=1", "sort=date_modified&ascending=0", "sort=date_modified&ascending=1"];
   /** constructor */
   constructor() {
     this.channel = vscode.window.createOutputChannel(this.appName, { log: true });
@@ -59,17 +59,6 @@ class EverythingExtension {
     const config = vscode.workspace.getConfiguration(this.appCfgKey);
     const quickPick = vscode.window.createQuickPick();
     quickPick.placeholder = "Type to search ...";
-    quickPick.value = (await this.context.secrets.get(this.quickPickValueKey)) || "";
-
-    // do search
-    try {
-      quickPick.items = await this.searchEverything("");
-    } catch (error) {
-      const msg = `error: ${error}, httpServerUrl=${config.httpServerUrl}`;
-      this.channel.appendLine(msg);
-      vscode.window.showErrorMessage(msg);
-      return;
-    }
 
     // input handler
     quickPick.onDidChangeValue(async value => {
@@ -77,10 +66,10 @@ class EverythingExtension {
         if (value.match(/\*/g)) {
           value = value.replace(/\*/g, "");
           quickPick.value = value;
-          this.changeSortOrder();
+          this.changeSort();
           return;
         }
-        this.context.secrets.store(this.quickPickValueKey, quickPick.value || "");
+        await this.context.secrets.store(this.quickPickValueKey, quickPick.value || "");
         quickPick.items = await this.searchEverything(value);
       } catch (error) {
         const msg = `error: ${error}, httpServerUrl=${config.httpServerUrl}`;
@@ -116,6 +105,9 @@ class EverythingExtension {
       }
     });
 
+    // do search
+    quickPick.value = (await this.context.secrets.get(this.quickPickValueKey)) || "";
+
     // show quickpick
     quickPick.show();
   }
@@ -126,7 +118,7 @@ class EverythingExtension {
     var pattern2 = new RegExp('<img class="icon" src="/(file|folder).gif" alt="">([^>]+)</a>.*<nobr>([^>]+)</nobr></span></a></td>', "g");
     const config = vscode.workspace.getConfiguration(this.appCfgKey);
     const search = encodeURIComponent(value);
-    const sort = (await this.context.secrets.get(this.sortKey)) || "";
+    const sort = await this.getSort();
     const url = new URL(`?search=${search}&${sort}`, config.httpServerUrl).toString();
     const response = await fetch(url);
     const html = await response.text();
@@ -154,11 +146,19 @@ class EverythingExtension {
     return array;
   }
 
-  /** change sort */
-  private async changeSortOrder() {
+  /** get sort */
+  private async getSort(): Promise<string> {
     const sort = (await this.context.secrets.get(this.sortKey)) || this.sortArray[0];
+    this.channel.appendLine(`debug: sort= ${sort}`);
+    return sort;
+  }
+
+  /** change sort */
+  private async changeSort() {
+    const sort = await this.getSort();
     const newSort = this.sortArray[(this.sortArray.findIndex(item => item === sort) + 1) % this.sortArray.length];
-    this.context.secrets.store(this.sortKey, newSort || "");
+    await this.context.secrets.store(this.sortKey, newSort || "");
+    this.channel.appendLine(`debug: sort= ${sort} -> ${newSort} `);
   }
 }
 export const everythingextension = new EverythingExtension();
