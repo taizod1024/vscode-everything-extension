@@ -132,7 +132,7 @@ class EverythingExtension {
                   break;
                 case OPEN_WITH_CMD_AS_ADMIN:
                   parentPath = path.dirname(pathToAny);
-                  cmd = `powershell -command start-process 'cmd.exe' -Argumentlist '/K','cd /d ${parentPath}' -verb runas -wait`;
+                  cmd = `powershell -command start-process 'cmd.exe' -Argumentlist '/K','cd /d ${parentPath}' -wait -verb runas`;
                   require("child_process").exec(cmd);
                   break;
                 case OPEN_WITH_POWERSHELL:
@@ -142,7 +142,7 @@ class EverythingExtension {
                   break;
                 case OPEN_WITH_POWERSHELL_AS_ADMIN:
                   parentPath = path.dirname(pathToAny);
-                  cmd = `powershell -command start-process 'cmd.exe' -ArgumentList '/c "cd /d ${parentPath} && powershell"' -verb runas -wait`;
+                  cmd = `powershell -command start-process 'cmd.exe' -ArgumentList '/c "cd /d ${parentPath} && powershell"' -wait -verb runas`;
                   require("child_process").exec(cmd);
                   break;
                 case OPEN_WITH_DEFAULT_APPLICATION:
@@ -174,15 +174,15 @@ class EverythingExtension {
                   require("child_process").exec(cmd);
                   break;
                 case OPEN_WITH_CMD_AS_ADMIN:
-                  cmd = `powershell -command start-process 'cmd.exe' -Argumentlist '/K','cd /d ${pathToAny}' -verb runas -wait`;
+                  cmd = `powershell -command start-process 'cmd.exe' -Argumentlist '/K','cd /d ${pathToAny}' -wait -verb runas`;
                   require("child_process").exec(cmd);
                   break;
                 case OPEN_WITH_POWERSHELL:
-                  cmd = `powershell -command start-process 'cmd.exe' -ArgumentList '/c "cd /d ${pathToAny} && powershell"'`;
+                  cmd = `powershell -command start-process 'cmd.exe' -ArgumentList '/c "cd /d ${pathToAny} && powershell"' -wait`;
                   require("child_process").exec(cmd);
                   break;
                 case OPEN_WITH_POWERSHELL_AS_ADMIN:
-                  cmd = `powershell -command start-process 'cmd.exe' -ArgumentList '/c "cd /d ${pathToAny} && powershell"' -verb runas -wait`;
+                  cmd = `powershell -command start-process 'cmd.exe' -ArgumentList '/c "cd /d ${pathToAny} && powershell"' -wait -verb runas`;
                   require("child_process").exec(cmd);
                   break;
                 case COPY_PATH_TO_CLIPBOARD:
