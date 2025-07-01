@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.11](https://github.com/taizod1024/vscode-everything-extension/compare/v0.0.10...v0.0.11) (2025-07-01)
+
+
+### Features
+
+* 管理者権限 ([32ace86](https://github.com/taizod1024/vscode-everything-extension/commit/32ace863d8a872c22a57f9382455af569f767cdf))
+
 ### [0.0.10](https://github.com/taizod1024/vscode-everything-extension/compare/v0.0.9...v0.0.10) (2025-07-01)
 
 
