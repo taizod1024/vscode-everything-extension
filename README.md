@@ -6,15 +6,24 @@ Press `Ctrl + Alt + L` to quickly search for files and folders using [Everything
 - Press `*` to toggle the sorting order.
 - You can choose how to open items.
   - File
-    - Open with VS Code
-    - Open with Explorer
-    - Open with the default application
+    - Open file with VS Code
+    - Open folder with VS Code
+    - Open folder with Explorer
+    - Open folder with Terminal
+    - Open folder with CMD
+    - Open folder with CMD as administrator
+    - Open folder with PowerShell
+    - Open folder with PowerShell as administrator
+    - Open file with the default application
     - Copy path to clipboard
   - Folder
-    - Open with VS Code
-    - Open with Explorer
-    - Open with CMD
-    - Open with PowerShell
+    - Open folder with VS Code
+    - Open folder with Explorer
+    - Open folder with Terminal
+    - Open folder with CMD
+    - Open folder with CMD as administrator
+    - Open folder with PowerShell
+    - Open folder with PowerShell as administrator
     - Copy path to clipboard
 
 ![ee01](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee01.png?raw=true)
