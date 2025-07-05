@@ -94,6 +94,10 @@ class EverythingExtension {
     quickPick.onDidAccept(() => {
       try {
         const selectedItem = quickPick.selectedItems[0];
+        if (selectedItem.label.match("result=")) {
+          quickPick.hide();
+          return;
+        }
         if (selectedItem && selectedItem.label.match(/[\\/]/)) {
           quickPick.hide();
           const pathToAny = selectedItem.label;
@@ -102,86 +106,106 @@ class EverythingExtension {
           if (config.debug) {
             this.channel.appendLine(`debug: selected='${pathToAny}'`);
           }
-          const OPEN_WITH_VSCODE = "open with vscode";
-          const OPEN_WITH_EXPLORER = "open with explorer";
-          const OPEN_WITH_DEFAULT_APPLICATION = "open with default application";
+          const OPEN_FILE_WITH_VSCODE = "open file with vscode";
+          const OPEN_FOLDER_WITH_VSCODE = "open folder with vscode";
+          const OPEN_FOLDER_WITH_EXPLORER = "open folder with explorer";
+          const OPEN_FOLDER_WITH_TERMINAL = "open folder with terminal";
+          const OPEN_FOLDER_WITH_CMD = "open folder with cmd";
+          const OPEN_FOLDER_WITH_POWERSHELL = "open folder with powershell";
+          const OPEN_FOLDER_WITH_CMD_AS_ADMIN = "open folder with cmd as admin";
+          const OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN = "open folder with powershell as admin";
+          const OPEN_FILE_WITH_DEFAULT_APPLICATION = "open file with default application";
           const COPY_PATH_TO_CLIPBOARD = "copy path to clipboard";
-          const OPEN_WITH_CMD = "open with cmd";
-          const OPEN_WITH_POWERSHELL = "open with powershell";
-          const OPEN_WITH_CMD_AS_ADMIN = "open with cmd as admin";
-          const OPEN_WITH_POWERSHELL_AS_ADMIN = "open with powershell as admin";
           if (type !== "\\") {
-            vscode.window.showQuickPick([OPEN_WITH_VSCODE, OPEN_WITH_EXPLORER, OPEN_WITH_CMD, OPEN_WITH_CMD_AS_ADMIN, OPEN_WITH_POWERSHELL, OPEN_WITH_POWERSHELL_AS_ADMIN, OPEN_WITH_DEFAULT_APPLICATION, COPY_PATH_TO_CLIPBOARD], { placeHolder: "Choose how to open the selected file" }).then(async selection => {
-              if (!selection) {
-                return;
-              }
-              let cmd;
-              let parentPath;
-              switch (selection) {
-                case OPEN_WITH_VSCODE:
-                  vscode.commands.executeCommand("vscode.open", vscode.Uri.file(pathToAny));
-                  break;
-                case OPEN_WITH_EXPLORER:
-                  cmd = `explorer /select,"${pathToAny}"`;
-                  require("child_process").exec(cmd);
-                  break;
-                case OPEN_WITH_CMD:
-                  parentPath = path.dirname(pathToAny);
-                  cmd = `powershell -command start-process 'cmd.exe' -Argumentlist '/K','cd /d ${parentPath}' -wait`;
-                  require("child_process").exec(cmd);
-                  break;
-                case OPEN_WITH_CMD_AS_ADMIN:
-                  parentPath = path.dirname(pathToAny);
-                  cmd = `powershell -command start-process 'cmd.exe' -Argumentlist '/K','cd /d ${parentPath}' -wait -verb runas`;
-                  require("child_process").exec(cmd);
-                  break;
-                case OPEN_WITH_POWERSHELL:
-                  parentPath = path.dirname(pathToAny);
-                  cmd = `powershell -command start-process 'cmd.exe' -ArgumentList '/c "cd /d ${parentPath} && powershell"' -wait`;
-                  require("child_process").exec(cmd);
-                  break;
-                case OPEN_WITH_POWERSHELL_AS_ADMIN:
-                  parentPath = path.dirname(pathToAny);
-                  cmd = `powershell -command start-process 'cmd.exe' -ArgumentList '/c "cd /d ${parentPath} && powershell"' -wait -verb runas`;
-                  require("child_process").exec(cmd);
-                  break;
-                case OPEN_WITH_DEFAULT_APPLICATION:
-                  cmd = `explorer "${pathToAny}"`;
-                  require("child_process").exec(cmd);
-                  break;
-                case COPY_PATH_TO_CLIPBOARD:
-                  await vscode.env.clipboard.writeText(pathToAny);
-                  vscode.window.showInformationMessage(`Path copied to clipboard: ${pathToAny}`);
-                  break;
-              }
-            });
+            vscode.window
+              .showQuickPick([OPEN_FILE_WITH_VSCODE, OPEN_FOLDER_WITH_VSCODE, OPEN_FOLDER_WITH_EXPLORER, OPEN_FOLDER_WITH_TERMINAL, OPEN_FOLDER_WITH_CMD, OPEN_FOLDER_WITH_CMD_AS_ADMIN, OPEN_FOLDER_WITH_POWERSHELL, OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN, OPEN_FILE_WITH_DEFAULT_APPLICATION, COPY_PATH_TO_CLIPBOARD], {
+                placeHolder: "Choose how to open the selected file",
+              })
+              .then(async selection => {
+                if (!selection) {
+                  return;
+                }
+                let cmd;
+                let parentPath = path.dirname(pathToAny);
+                switch (selection) {
+                  case OPEN_FILE_WITH_VSCODE:
+                    vscode.commands.executeCommand("vscode.open", vscode.Uri.file(pathToAny));
+                    break;
+                  case OPEN_FOLDER_WITH_VSCODE:
+                    const forceNewWindow = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0;
+                    vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(parentPath), { forceNewWindow: forceNewWindow });
+                    break;
+                  case OPEN_FOLDER_WITH_EXPLORER:
+                    cmd = `explorer /select,"${pathToAny}"`;
+                    require("child_process").exec(cmd);
+                    break;
+                  case OPEN_FOLDER_WITH_TERMINAL:
+                    const terminal = vscode.window.createTerminal({
+                      name: parentPath,
+                      cwd: parentPath,
+                    });
+                    terminal.show();
+                    break;
+                  case OPEN_FOLDER_WITH_CMD:
+                    cmd = `powershell -command start-process 'cmd.exe' -Argumentlist '/K','cd /d ${parentPath}' -wait`;
+                    require("child_process").exec(cmd);
+                    break;
+                  case OPEN_FOLDER_WITH_CMD_AS_ADMIN:
+                    cmd = `powershell -command start-process 'cmd.exe' -Argumentlist '/K','cd /d ${parentPath}' -wait -verb runas`;
+                    require("child_process").exec(cmd);
+                    break;
+                  case OPEN_FOLDER_WITH_POWERSHELL:
+                    cmd = `powershell -command start-process 'cmd.exe' -ArgumentList '/c "cd /d ${parentPath} && powershell"' -wait`;
+                    require("child_process").exec(cmd);
+                    break;
+                  case OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN:
+                    cmd = `powershell -command start-process 'cmd.exe' -ArgumentList '/c "cd /d ${parentPath} && powershell"' -wait -verb runas`;
+                    require("child_process").exec(cmd);
+                    break;
+                  case OPEN_FILE_WITH_DEFAULT_APPLICATION:
+                    cmd = `explorer "${pathToAny}"`;
+                    require("child_process").exec(cmd);
+                    break;
+                  case COPY_PATH_TO_CLIPBOARD:
+                    await vscode.env.clipboard.writeText(pathToAny);
+                    vscode.window.showInformationMessage(`Path copied to clipboard: ${pathToAny}`);
+                    break;
+                }
+              });
           } else {
-            vscode.window.showQuickPick([OPEN_WITH_VSCODE, OPEN_WITH_EXPLORER, OPEN_WITH_CMD, OPEN_WITH_CMD_AS_ADMIN, OPEN_WITH_POWERSHELL, OPEN_WITH_POWERSHELL_AS_ADMIN, COPY_PATH_TO_CLIPBOARD], { placeHolder: "Choose how to open the selected folder" }).then(async selection => {
+            vscode.window.showQuickPick([OPEN_FOLDER_WITH_VSCODE, OPEN_FOLDER_WITH_EXPLORER, OPEN_FOLDER_WITH_TERMINAL, OPEN_FOLDER_WITH_CMD, OPEN_FOLDER_WITH_CMD_AS_ADMIN, OPEN_FOLDER_WITH_POWERSHELL, OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN, COPY_PATH_TO_CLIPBOARD], { placeHolder: "Choose how to open the selected folder" }).then(async selection => {
               if (!selection) {
                 return;
               }
               let cmd;
               switch (selection) {
-                case OPEN_WITH_VSCODE:
+                case OPEN_FOLDER_WITH_VSCODE:
                   vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(pathToAny), { forceNewWindow: true });
                   break;
-                case OPEN_WITH_EXPLORER:
+                case OPEN_FOLDER_WITH_EXPLORER:
                   cmd = `explorer "${pathToAny}"`;
                   require("child_process").exec(cmd);
                   break;
-                case OPEN_WITH_CMD:
+                case OPEN_FOLDER_WITH_TERMINAL:
+                  const terminal = vscode.window.createTerminal({
+                    name: pathToAny,
+                    cwd: pathToAny,
+                  });
+                  terminal.show();
+                  break;
+                case OPEN_FOLDER_WITH_CMD:
                   cmd = `powershell -command start-process 'cmd.exe' -Argumentlist '/K','cd /d ${pathToAny}' -wait`;
                   require("child_process").exec(cmd);
                   break;
-                case OPEN_WITH_CMD_AS_ADMIN:
+                case OPEN_FOLDER_WITH_CMD_AS_ADMIN:
                   cmd = `powershell -command start-process 'cmd.exe' -Argumentlist '/K','cd /d ${pathToAny}' -wait -verb runas`;
                   require("child_process").exec(cmd);
                   break;
-                case OPEN_WITH_POWERSHELL:
+                case OPEN_FOLDER_WITH_POWERSHELL:
                   cmd = `powershell -command start-process 'cmd.exe' -ArgumentList '/c "cd /d ${pathToAny} && powershell"' -wait`;
                   require("child_process").exec(cmd);
                   break;
-                case OPEN_WITH_POWERSHELL_AS_ADMIN:
+                case OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN:
                   cmd = `powershell -command start-process 'cmd.exe' -ArgumentList '/c "cd /d ${pathToAny} && powershell"' -wait -verb runas`;
                   require("child_process").exec(cmd);
                   break;
