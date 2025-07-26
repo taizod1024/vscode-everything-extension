@@ -52,6 +52,21 @@ class EverythingExtension {
         }
       })
     );
+
+    // init command for current file actions
+    cmdname = `${this.appId}.fileActions`;
+    context.subscriptions.push(
+      vscode.commands.registerCommand(`${cmdname}`, async () => {
+        try {
+          await this.showCurrentFileActions();
+        } catch (error) {
+          const msg = `error: ${error}`;
+          this.channel.appendLine(msg);
+          vscode.window.showErrorMessage(msg);
+          return;
+        }
+      })
+    );
   }
 
   /** search any */
@@ -126,6 +141,24 @@ class EverythingExtension {
 
     // show quickpick
     quickPick.show();
+  }
+
+  /** show file actions for currently opened file */
+  private async showCurrentFileActions() {
+    const activeEditor = vscode.window.activeTextEditor;
+    if (!activeEditor) {
+      vscode.window.showWarningMessage("No file is currently open");
+      return;
+    }
+
+    const filePath = activeEditor.document.uri.fsPath;
+    if (!filePath) {
+      vscode.window.showWarningMessage("Current file has no file path");
+      return;
+    }
+
+    // Show file actions for the current file
+    await this.showFileActions(filePath);
   }
 
   /** search with everything */

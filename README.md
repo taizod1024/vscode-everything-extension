@@ -1,6 +1,7 @@
 # Everything Extension
 
 Press `Ctrl + Alt + L` to quickly search for files and folders using [Everything](https://www.voidtools.com/).
+Press `Shift + Alt + L` to perform actions on the open file.
 
 - Enable Everything's HTTP Server before using this extension.
 - Press `*` to toggle the sorting order.
