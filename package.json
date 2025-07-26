@@ -19,12 +19,20 @@
       {
         "command": "everything-extension.search",
         "title": "Everything: Search"
+      },
+      {
+        "command": "everything-extension.fileActions",
+        "title": "Everything: File Actions"
       }
     ],
     "keybindings": [
       {
         "command": "everything-extension.search",
         "key": "ctrl+alt+l"
+      },
+      {
+        "command": "everything-extension.fileActions",
+        "key": "shift+alt+l"
       }
     ],
     "configuration": [
