@@ -315,6 +315,8 @@ class EverythingExtension {
       { label: `$(shield) ${OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN}`, alwaysShow: true },
       { label: `$(link-external) ${OPEN_FILE_WITH_DEFAULT_APPLICATION}`, alwaysShow: true },
       { label: `$(clippy) ${COPY_PATH_TO_CLIPBOARD}`, alwaysShow: true },
+      { label: "", kind: vscode.QuickPickItemKind.Separator },
+      { label: `$(search) search`, description: "search" },
     ];
 
     const fileName = path.basename(filePath);
@@ -323,6 +325,12 @@ class EverythingExtension {
     });
 
     if (!selection) {
+      return;
+    }
+
+    // 検索が選択された場合は現在のファイルの親パスで検索を実行
+    if (selection.description === "search") {
+      await this.searchWithInitialPath(filePath);
       return;
     }
 
@@ -390,10 +398,7 @@ class EverythingExtension {
 
       // 親フォルダを追加（ルートディスクでない場合）
       const parentPath = path.dirname(currentFolderPath);
-      const navigationItems: vscode.QuickPickItem[] = [
-        { label: `$(search) search`, description: "search", alwaysShow: true },
-        { label: "", kind: vscode.QuickPickItemKind.Separator },
-      ];
+      const navigationItems: vscode.QuickPickItem[] = [];
 
       // ルートディレクトリでない場合のみ親フォルダを表示
       const isRootDirectory = path.parse(currentFolderPath).root === currentFolderPath;
@@ -423,6 +428,8 @@ class EverythingExtension {
         { label: `$(terminal-powershell) ${OPEN_FOLDER_WITH_POWERSHELL}`, alwaysShow: true },
         { label: `$(shield) ${OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN}`, alwaysShow: true },
         { label: `$(clippy) ${COPY_PATH_TO_CLIPBOARD}`, alwaysShow: true },
+        { label: "", kind: vscode.QuickPickItemKind.Separator },
+        { label: `$(search) search`, description: "search", alwaysShow: true },
       ];
 
       // サブフォルダとファイルがある場合は区切り線を追加してアクションの前に配置
