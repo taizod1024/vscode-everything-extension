@@ -32,7 +32,7 @@ class EverythingExtension {
   }
 
   /** activate extension */
-  private activate(context: vscode.ExtensionContext) {
+  public activate(context: vscode.ExtensionContext) {
     this.context = context;
     this.channel.appendLine(`${this.appName}`);
     let cmdname = "";
@@ -117,8 +117,20 @@ class EverythingExtension {
           const OPEN_FILE_WITH_DEFAULT_APPLICATION = "open file with default application";
           const COPY_PATH_TO_CLIPBOARD = "copy path to clipboard";
           if (type !== "\\") {
+            const fileActions = [
+              `$(file-code) ${OPEN_FILE_WITH_VSCODE}`,
+              `$(folder-opened) ${OPEN_FOLDER_WITH_VSCODE}`,
+              `$(folder) ${OPEN_FOLDER_WITH_EXPLORER}`,
+              `$(terminal) ${OPEN_FOLDER_WITH_TERMINAL}`,
+              `$(terminal-cmd) ${OPEN_FOLDER_WITH_CMD}`,
+              `$(shield) ${OPEN_FOLDER_WITH_CMD_AS_ADMIN}`,
+              `$(terminal-powershell) ${OPEN_FOLDER_WITH_POWERSHELL}`,
+              `$(shield) ${OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN}`,
+              `$(link-external) ${OPEN_FILE_WITH_DEFAULT_APPLICATION}`,
+              `$(clippy) ${COPY_PATH_TO_CLIPBOARD}`,
+            ];
             vscode.window
-              .showQuickPick([OPEN_FILE_WITH_VSCODE, OPEN_FOLDER_WITH_VSCODE, OPEN_FOLDER_WITH_EXPLORER, OPEN_FOLDER_WITH_TERMINAL, OPEN_FOLDER_WITH_CMD, OPEN_FOLDER_WITH_CMD_AS_ADMIN, OPEN_FOLDER_WITH_POWERSHELL, OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN, OPEN_FILE_WITH_DEFAULT_APPLICATION, COPY_PATH_TO_CLIPBOARD], {
+              .showQuickPick(fileActions, {
                 placeHolder: "Choose how to open the selected file",
               })
               .then(async selection => {
@@ -127,7 +139,9 @@ class EverythingExtension {
                 }
                 let cmd;
                 let parentPath = path.dirname(pathToAny);
-                switch (selection) {
+                // アイコン付きラベルから元のアクション文字列を抽出
+                const action = selection.replace(/^\$\([^)]+\)\s+/, "");
+                switch (action) {
                   case OPEN_FILE_WITH_VSCODE:
                     vscode.commands.executeCommand("vscode.open", vscode.Uri.file(pathToAny));
                     break;
@@ -173,12 +187,24 @@ class EverythingExtension {
                 }
               });
           } else {
-            vscode.window.showQuickPick([OPEN_FOLDER_WITH_VSCODE, OPEN_FOLDER_WITH_EXPLORER, OPEN_FOLDER_WITH_TERMINAL, OPEN_FOLDER_WITH_CMD, OPEN_FOLDER_WITH_CMD_AS_ADMIN, OPEN_FOLDER_WITH_POWERSHELL, OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN, COPY_PATH_TO_CLIPBOARD], { placeHolder: "Choose how to open the selected folder" }).then(async selection => {
+            const folderActions = [
+              `$(folder-opened) ${OPEN_FOLDER_WITH_VSCODE}`,
+              `$(folder) ${OPEN_FOLDER_WITH_EXPLORER}`,
+              `$(terminal) ${OPEN_FOLDER_WITH_TERMINAL}`,
+              `$(terminal-cmd) ${OPEN_FOLDER_WITH_CMD}`,
+              `$(shield) ${OPEN_FOLDER_WITH_CMD_AS_ADMIN}`,
+              `$(terminal-powershell) ${OPEN_FOLDER_WITH_POWERSHELL}`,
+              `$(shield) ${OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN}`,
+              `$(clippy) ${COPY_PATH_TO_CLIPBOARD}`,
+            ];
+            vscode.window.showQuickPick(folderActions, { placeHolder: "Choose how to open the selected folder" }).then(async selection => {
               if (!selection) {
                 return;
               }
               let cmd;
-              switch (selection) {
+              // アイコン付きラベルから元のアクション文字列を抽出
+              const action = selection.replace(/^\$\([^)]+\)\s+/, "");
+              switch (action) {
                 case OPEN_FOLDER_WITH_VSCODE:
                   vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(pathToAny), { forceNewWindow: true });
                   break;
@@ -250,9 +276,11 @@ class EverythingExtension {
     const array2 = Array.from(results2).map(result => {
       const path = result[3] + "\\" + result[2];
       const type = result[1] === "folder" ? "\\" : "";
+      const isFolder = result[1] === "folder";
       return {
         label: path,
         description: type,
+        iconPath: isFolder ? vscode.ThemeIcon.Folder : vscode.ThemeIcon.File,
         alwaysShow: true,
       };
     });
