@@ -387,6 +387,11 @@ class EverythingExtension {
 
   /** get subfolders in a directory */
   private async getSubfolders(dirPath: string): Promise<vscode.QuickPickItem[]> {
+    // 空文字の場合はドライブ一覧を返す
+    if (dirPath === "") {
+      return await this.getAvailableDrives();
+    }
+
     try {
       const items = await fs.promises.readdir(dirPath, { withFileTypes: true });
       const folders = items
@@ -403,6 +408,11 @@ class EverythingExtension {
 
   /** get files in a directory */
   private async getFiles(dirPath: string): Promise<vscode.QuickPickItem[]> {
+    // 空文字の場合（ドライブ一覧表示時）はファイルなし
+    if (dirPath === "") {
+      return [];
+    }
+
     try {
       const items = await fs.promises.readdir(dirPath, { withFileTypes: true });
       const files = items
@@ -415,6 +425,29 @@ class EverythingExtension {
     } catch (error) {
       return [];
     }
+  }
+
+  /** get available drives (Windows only) */
+  private async getAvailableDrives(): Promise<vscode.QuickPickItem[]> {
+    const drives: vscode.QuickPickItem[] = [];
+
+    if (process.platform === "win32") {
+      const driveLetters = ["C:", "D:", "E:", "F:", "G:", "H:", "I:", "J:", "K:", "L:", "M:", "N:", "O:", "P:", "Q:", "R:", "S:", "T:", "U:", "V:", "W:", "X:", "Y:", "Z:"];
+
+      for (const drive of driveLetters) {
+        try {
+          await fs.promises.access(drive + "\\");
+          drives.push({
+            label: `$(device-desktop) ${drive}`,
+            description: "\\",
+          });
+        } catch (error) {
+          // ドライブが存在しない場合は無視
+        }
+      }
+    }
+
+    return drives;
   }
 
   /** show folder navigation quickpick */
@@ -430,13 +463,12 @@ class EverythingExtension {
       const subfolders = await this.getSubfolders(currentFolderPath);
       const files = await this.getFiles(currentFolderPath);
 
-      // 親フォルダを追加（ルートディスクでない場合）
+      // 親フォルダを追加（空文字でもルートディレクトリでもない場合）
       const parentPath = path.dirname(currentFolderPath);
       const navigationItems: vscode.QuickPickItem[] = [];
 
-      // ルートディレクトリでない場合のみ親フォルダを表示
-      const isRootDirectory = path.parse(currentFolderPath).root === currentFolderPath;
-      if (!isRootDirectory) {
+      // 空文字（ドライブ一覧）でない場合のみ親フォルダを表示
+      if (currentFolderPath !== "") {
         navigationItems.push({
           label: `$(file-directory) ..`,
           description: "\\",
@@ -454,28 +486,30 @@ class EverythingExtension {
       const COPY_PATH_TO_CLIPBOARD = "copy path to clipboard";
       const SEARCH_EVERYTHING = "search everything";
 
-      const folderActions: vscode.QuickPickItem[] = [
-        { label: `$(vscode)`, description: OPEN_FOLDER_WITH_VSCODE, alwaysShow: true },
-        { label: `$(folder-opened)`, description: OPEN_FOLDER_WITH_EXPLORER, alwaysShow: true },
-        { label: `$(terminal)`, description: OPEN_FOLDER_WITH_TERMINAL, alwaysShow: true },
-        { label: `$(terminal-cmd)`, description: OPEN_FOLDER_WITH_CMD, alwaysShow: true },
-        { label: `$(shield)`, description: OPEN_FOLDER_WITH_CMD_AS_ADMIN, alwaysShow: true },
-        { label: `$(terminal-powershell)`, description: OPEN_FOLDER_WITH_POWERSHELL, alwaysShow: true },
-        { label: `$(shield)`, description: OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN, alwaysShow: true },
-        { label: `$(clippy)`, description: COPY_PATH_TO_CLIPBOARD, alwaysShow: true },
-        { label: "", kind: vscode.QuickPickItemKind.Separator },
-        { label: `$(search)`, description: SEARCH_EVERYTHING, alwaysShow: true },
-      ];
-
       // サブフォルダとファイルがある場合は区切り線を追加してアクションの前に配置
       const allFolders = [...navigationItems, ...subfolders];
       const allContents = [...allFolders, ...files];
 
       let allItems: vscode.QuickPickItem[] = [];
-      if (allContents.length > 0) {
-        allItems = [...allContents, { label: "", kind: vscode.QuickPickItemKind.Separator }, ...folderActions];
+      if (currentFolderPath === "") {
+        // ドライブ一覧の場合は search アクションのみ表示
+        allItems = [...allContents, { label: "", kind: vscode.QuickPickItemKind.Separator }, { label: `$(search)`, description: SEARCH_EVERYTHING, alwaysShow: true }];
       } else {
-        allItems = folderActions;
+        // 通常のフォルダの場合は全てのアクションを表示
+        allItems = [
+          ...allContents,
+          { label: "", kind: vscode.QuickPickItemKind.Separator },
+          { label: `$(vscode)`, description: OPEN_FOLDER_WITH_VSCODE, alwaysShow: true },
+          { label: `$(folder-opened)`, description: OPEN_FOLDER_WITH_EXPLORER, alwaysShow: true },
+          { label: `$(terminal)`, description: OPEN_FOLDER_WITH_TERMINAL, alwaysShow: true },
+          { label: `$(terminal-cmd)`, description: OPEN_FOLDER_WITH_CMD, alwaysShow: true },
+          { label: `$(shield)`, description: OPEN_FOLDER_WITH_CMD_AS_ADMIN, alwaysShow: true },
+          { label: `$(terminal-powershell)`, description: OPEN_FOLDER_WITH_POWERSHELL, alwaysShow: true },
+          { label: `$(shield)`, description: OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN, alwaysShow: true },
+          { label: `$(clippy)`, description: COPY_PATH_TO_CLIPBOARD, alwaysShow: true },
+          { label: "", kind: vscode.QuickPickItemKind.Separator },
+          { label: `$(search)`, description: SEARCH_EVERYTHING, alwaysShow: true },
+        ];
       }
 
       if (config.debug) {
@@ -483,7 +517,7 @@ class EverythingExtension {
       }
 
       const selection = await vscode.window.showQuickPick(allItems, {
-        placeHolder: `folder: ${currentFolderPath}`,
+        placeHolder: currentFolderPath === "" ? "drives:" : `folder: ${currentFolderPath}`,
       });
 
       if (!selection) {
@@ -492,6 +526,7 @@ class EverythingExtension {
 
       // 検索が選択された場合は現在のパスで検索を実行
       if (selection.description === SEARCH_EVERYTHING) {
+        // 空文字（ドライブ一覧）の場合は空文字で検索
         await this.searchWithInitialPath(currentFolderPath);
         return; // 検索後はループを抜ける
       }
@@ -499,19 +534,32 @@ class EverythingExtension {
       // サブフォルダまたは親フォルダが選択された場合は次のフォルダに移動
       if (selection.description === "\\") {
         const label = this.getLabelNoIcon(selection.label);
-        currentFolderPath = label === ".." ? parentPath : path.join(currentFolderPath, label);
+        if (label === "..") {
+          // ルートディレクトリの場合は空文字（ドライブ一覧）に移動
+          const isRootDirectory = path.parse(currentFolderPath).root === currentFolderPath;
+          currentFolderPath = isRootDirectory ? "" : parentPath;
+        } else if (currentFolderPath === "") {
+          // ドライブの場合
+          currentFolderPath = label + "\\";
+        } else {
+          // サブフォルダの場合
+          currentFolderPath = path.join(currentFolderPath, label);
+        }
         continue; // ループを継続
       }
 
       // ファイルが選択された場合はファイルアクションを表示
       if (selection.description === "") {
         const fileName = this.getLabelNoIcon(selection.label);
-        const filePath = path.join(currentFolderPath, fileName);
+        const filePath = currentFolderPath === "" ? fileName : path.join(currentFolderPath, fileName);
         await this.showFileActions(filePath);
       } else {
         // アクションが選択された場合はアクションを実行してループを抜ける
-        const action = selection.description;
-        await this.executeFolderAction(action, currentFolderPath);
+        // 空文字（ドライブ一覧）の場合はフォルダアクションを実行しない
+        if (currentFolderPath !== "") {
+          const action = selection.description;
+          await this.executeFolderAction(action, currentFolderPath);
+        }
       }
       break; // ループを抜ける
     }
