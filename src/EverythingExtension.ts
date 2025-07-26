@@ -108,10 +108,15 @@ class EverythingExtension {
             this.channel.appendLine(`debug: selected='${pathToAny}'`);
           }
 
+
           if (type !== "\\") {
             // ファイルが選択された場合
             await this.showFileActions(pathToAny);
+            // ファイルが選択された場合
+            await this.showFileActions(pathToAny);
           } else {
+            // フォルダーが選択された場合
+            await this.showFolderNavigation(pathToAny);
             // フォルダーが選択された場合
             await this.showFolderNavigation(pathToAny);
           }
