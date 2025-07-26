@@ -108,15 +108,10 @@ class EverythingExtension {
             this.channel.appendLine(`debug: selected='${pathToAny}'`);
           }
 
-
           if (type !== "\\") {
             // ファイルが選択された場合
             await this.showFileActions(pathToAny);
-            // ファイルが選択された場合
-            await this.showFileActions(pathToAny);
           } else {
-            // フォルダーが選択された場合
-            await this.showFolderNavigation(pathToAny);
             // フォルダーが選択された場合
             await this.showFolderNavigation(pathToAny);
           }
@@ -308,9 +303,11 @@ class EverythingExtension {
     const COPY_PATH_TO_CLIPBOARD = "copy path to clipboard";
 
     const fileActions: vscode.QuickPickItem[] = [
-      { label: `$(file-code) ${OPEN_FILE_WITH_VSCODE}`, alwaysShow: true },
-      { label: `$(folder-opened) ${OPEN_FOLDER_WITH_VSCODE}`, alwaysShow: true },
-      { label: `$(folder) ${OPEN_FOLDER_WITH_EXPLORER}`, alwaysShow: true },
+      { label: `$(folder) .`, description: "\\" },
+      { label: "", kind: vscode.QuickPickItemKind.Separator },
+      { label: `$(vscode) ${OPEN_FILE_WITH_VSCODE}`, alwaysShow: true },
+      { label: `$(vscode) ${OPEN_FOLDER_WITH_VSCODE}`, alwaysShow: true },
+      { label: `$(folder-opened) ${OPEN_FOLDER_WITH_EXPLORER}`, alwaysShow: true },
       { label: `$(terminal) ${OPEN_FOLDER_WITH_TERMINAL}`, alwaysShow: true },
       { label: `$(terminal-cmd) ${OPEN_FOLDER_WITH_CMD}`, alwaysShow: true },
       { label: `$(shield) ${OPEN_FOLDER_WITH_CMD_AS_ADMIN}`, alwaysShow: true },
@@ -326,6 +323,13 @@ class EverythingExtension {
     });
 
     if (!selection) {
+      return;
+    }
+
+    // 同一フォルダが選択された場合はフォルダナビゲーションを表示
+    if (selection.description === "\\" && selection.label.includes(".")) {
+      const parentPath = path.dirname(filePath);
+      await this.showFolderNavigation(parentPath);
       return;
     }
 
@@ -346,7 +350,7 @@ class EverythingExtension {
       const folders = items
         .filter(item => item.isDirectory())
         .map(folder => ({
-          label: `$(folder) ${folder.name}`,
+          label: `$(file-directory) ${folder.name}`,
           description: "\\",
         }));
       return folders;
@@ -362,7 +366,7 @@ class EverythingExtension {
       const files = items
         .filter(item => item.isFile())
         .map(file => ({
-          label: `$(file-text) ${file.name}`,
+          label: `$(file) ${file.name}`,
           description: "",
         }));
       return files;
@@ -392,7 +396,7 @@ class EverythingExtension {
       const isRootDirectory = path.parse(currentFolderPath).root === currentFolderPath;
       if (!isRootDirectory) {
         navigationItems.push({
-          label: `$(folder) ..`,
+          label: `$(file-directory) ..`,
           description: "\\",
         });
       }
@@ -408,8 +412,8 @@ class EverythingExtension {
       const COPY_PATH_TO_CLIPBOARD = "copy path to clipboard";
 
       const folderActions: vscode.QuickPickItem[] = [
-        { label: `$(folder-opened) ${OPEN_FOLDER_WITH_VSCODE}`, alwaysShow: true },
-        { label: `$(folder) ${OPEN_FOLDER_WITH_EXPLORER}`, alwaysShow: true },
+        { label: `$(vscode) ${OPEN_FOLDER_WITH_VSCODE}`, alwaysShow: true },
+        { label: `$(folder-opened) ${OPEN_FOLDER_WITH_EXPLORER}`, alwaysShow: true },
         { label: `$(terminal) ${OPEN_FOLDER_WITH_TERMINAL}`, alwaysShow: true },
         { label: `$(terminal-cmd) ${OPEN_FOLDER_WITH_CMD}`, alwaysShow: true },
         { label: `$(shield) ${OPEN_FOLDER_WITH_CMD_AS_ADMIN}`, alwaysShow: true },
@@ -419,18 +423,18 @@ class EverythingExtension {
       ];
 
       // サブフォルダとファイルがある場合は区切り線を追加してアクションの前に配置
-      let allItems: vscode.QuickPickItem[] = [];
       const allFolders = [...navigationItems, ...subfolders];
       const allContents = [...allFolders, ...files];
 
-      if (config.debug) {
-        this.channel.appendLine(`debug: folders=${subfolders.length}, files=${files.length}, total=${allContents.length}`);
-      }
-
+      let allItems: vscode.QuickPickItem[] = [];
       if (allContents.length > 0) {
         allItems = [...allContents, { label: "", kind: vscode.QuickPickItemKind.Separator }, ...folderActions];
       } else {
         allItems = folderActions;
+      }
+
+      if (config.debug) {
+        this.channel.appendLine(`debug: folders=${subfolders.length}, files=${files.length}, total=${allContents.length}`);
       }
 
       const selection = await vscode.window.showQuickPick(allItems, {
@@ -453,12 +457,11 @@ class EverythingExtension {
         const fileName = this.getLabelNoIcon(selection.label);
         const filePath = path.join(currentFolderPath, fileName);
         await this.showFileActions(filePath);
-        break; // ループを抜ける
+      } else {
+        // アクションが選択された場合はアクションを実行してループを抜ける
+        const action = this.getLabelNoIcon(selection.label);
+        await this.executeFolderAction(action, currentFolderPath);
       }
-
-      // アクションが選択された場合はアクションを実行してループを抜ける
-      const action = this.getLabelNoIcon(selection.label);
-      await this.executeFolderAction(action, currentFolderPath);
       break; // ループを抜ける
     }
   }
