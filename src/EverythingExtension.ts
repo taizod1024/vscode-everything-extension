@@ -390,7 +390,10 @@ class EverythingExtension {
 
       // 親フォルダを追加（ルートディスクでない場合）
       const parentPath = path.dirname(currentFolderPath);
-      const navigationItems: vscode.QuickPickItem[] = [];
+      const navigationItems: vscode.QuickPickItem[] = [
+        { label: `$(search) search`, description: "search", alwaysShow: true },
+        { label: "", kind: vscode.QuickPickItemKind.Separator },
+      ];
 
       // ルートディレクトリでない場合のみ親フォルダを表示
       const isRootDirectory = path.parse(currentFolderPath).root === currentFolderPath;
@@ -445,6 +448,12 @@ class EverythingExtension {
         return; // ユーザーがキャンセルした場合はループを抜ける
       }
 
+      // 検索が選択された場合は現在のパスで検索を実行
+      if (selection.description === "search") {
+        await this.searchWithInitialPath(currentFolderPath);
+        return; // 検索後はループを抜ける
+      }
+
       // サブフォルダまたは親フォルダが選択された場合は次のフォルダに移動
       if (selection.description === "\\") {
         const label = this.getLabelNoIcon(selection.label);
@@ -464,6 +473,82 @@ class EverythingExtension {
       }
       break; // ループを抜ける
     }
+  }
+
+  /** search with initial path */
+  private async searchWithInitialPath(initialPath: string) {
+    // init quickpick
+    const config = vscode.workspace.getConfiguration(this.appCfgKey);
+    const quickPick = vscode.window.createQuickPick();
+    quickPick.placeholder = "Type to search ...";
+
+    // init search with folder path
+    const searchValue = initialPath || (await this.context.secrets.get(this.quickPickValueKey)) || "";
+    quickPick.value = searchValue;
+
+    try {
+      quickPick.items = await this.searchEverything(searchValue);
+    } catch (error) {
+      const msg = `error: ${error}, httpServerUrl=${config.httpServerUrl}`;
+      this.channel.appendLine(msg);
+      vscode.window.showErrorMessage(msg);
+      return;
+    }
+
+    // input handler
+    quickPick.onDidChangeValue(async value => {
+      try {
+        if (value.match(/\*/g)) {
+          value = value.replace(/\*/g, "");
+          quickPick.value = value;
+          this.changeSort();
+          return;
+        }
+        await this.context.secrets.store(this.quickPickValueKey, quickPick.value || "");
+        quickPick.items = await this.searchEverything(value);
+      } catch (error) {
+        const msg = `error: ${error}, httpServerUrl=${config.httpServerUrl}`;
+        this.channel.appendLine(msg);
+        vscode.window.showErrorMessage(msg);
+        return;
+      }
+    });
+
+    // accept handler
+    quickPick.onDidAccept(async () => {
+      try {
+        const selectedItem = quickPick.selectedItems[0];
+        if (selectedItem.label.match("result=")) {
+          quickPick.hide();
+          return;
+        }
+        if (selectedItem && selectedItem.label.match(/[\\/]/)) {
+          quickPick.hide();
+          const pathToAny = selectedItem.label;
+          const type = selectedItem.description;
+          const config = vscode.workspace.getConfiguration(this.appCfgKey);
+          if (config.debug) {
+            this.channel.appendLine(`debug: selected='${pathToAny}'`);
+          }
+
+          if (type !== "\\") {
+            // ファイルが選択された場合
+            await this.showFileActions(pathToAny);
+          } else {
+            // フォルダーが選択された場合
+            await this.showFolderNavigation(pathToAny);
+          }
+        }
+      } catch (error) {
+        const msg = `error: ${error}`;
+        this.channel.appendLine(msg);
+        vscode.window.showErrorMessage(msg);
+        return;
+      }
+    });
+
+    // show quickpick
+    quickPick.show();
   }
 }
 export const everythingextension = new EverythingExtension();
