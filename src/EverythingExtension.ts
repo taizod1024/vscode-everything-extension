@@ -301,28 +301,37 @@ class EverythingExtension {
     const OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN = "open folder with powershell as admin";
     const OPEN_FILE_WITH_DEFAULT_APPLICATION = "open file with default application";
     const COPY_PATH_TO_CLIPBOARD = "copy path to clipboard";
+    const SEARCH_EVERYTHING = "search everything";
 
     const fileActions: vscode.QuickPickItem[] = [
       { label: `$(folder) .`, description: "\\" },
       { label: "", kind: vscode.QuickPickItemKind.Separator },
-      { label: `$(vscode) ${OPEN_FILE_WITH_VSCODE}`, alwaysShow: true },
-      { label: `$(vscode) ${OPEN_FOLDER_WITH_VSCODE}`, alwaysShow: true },
-      { label: `$(folder-opened) ${OPEN_FOLDER_WITH_EXPLORER}`, alwaysShow: true },
-      { label: `$(terminal) ${OPEN_FOLDER_WITH_TERMINAL}`, alwaysShow: true },
-      { label: `$(terminal-cmd) ${OPEN_FOLDER_WITH_CMD}`, alwaysShow: true },
-      { label: `$(shield) ${OPEN_FOLDER_WITH_CMD_AS_ADMIN}`, alwaysShow: true },
-      { label: `$(terminal-powershell) ${OPEN_FOLDER_WITH_POWERSHELL}`, alwaysShow: true },
-      { label: `$(shield) ${OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN}`, alwaysShow: true },
-      { label: `$(link-external) ${OPEN_FILE_WITH_DEFAULT_APPLICATION}`, alwaysShow: true },
-      { label: `$(clippy) ${COPY_PATH_TO_CLIPBOARD}`, alwaysShow: true },
+      { label: `$(vscode)`, description: OPEN_FILE_WITH_VSCODE, alwaysShow: true },
+      { label: `$(vscode)`, description: OPEN_FOLDER_WITH_VSCODE, alwaysShow: true },
+      { label: `$(folder-opened)`, description: OPEN_FOLDER_WITH_EXPLORER, alwaysShow: true },
+      { label: `$(terminal)`, description: OPEN_FOLDER_WITH_TERMINAL, alwaysShow: true },
+      { label: `$(terminal-cmd)`, description: OPEN_FOLDER_WITH_CMD, alwaysShow: true },
+      { label: `$(shield)`, description: OPEN_FOLDER_WITH_CMD_AS_ADMIN, alwaysShow: true },
+      { label: `$(terminal-powershell)`, description: OPEN_FOLDER_WITH_POWERSHELL, alwaysShow: true },
+      { label: `$(shield)`, description: OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN, alwaysShow: true },
+      { label: `$(link-external)`, description: OPEN_FILE_WITH_DEFAULT_APPLICATION, alwaysShow: true },
+      { label: `$(clippy)`, description: COPY_PATH_TO_CLIPBOARD, alwaysShow: true },
+      { label: "", kind: vscode.QuickPickItemKind.Separator },
+      { label: `$(search)`, description: SEARCH_EVERYTHING },
     ];
 
     const fileName = path.basename(filePath);
     const selection = await vscode.window.showQuickPick(fileActions, {
-      placeHolder: `${fileName}`,
+      placeHolder: `file: ${fileName}`,
     });
 
     if (!selection) {
+      return;
+    }
+
+    // 検索が選択された場合は現在のファイルの親パスで検索を実行
+    if (selection.description === SEARCH_EVERYTHING) {
+      await this.searchWithInitialPath(filePath);
       return;
     }
 
@@ -334,7 +343,7 @@ class EverythingExtension {
     }
 
     // アイコン付きラベルから元のアクション文字列を抽出
-    const action = this.getLabelNoIcon(selection.label);
+    const action = selection.description;
     await this.executeFileAction(action, filePath);
   }
 
@@ -410,16 +419,19 @@ class EverythingExtension {
       const OPEN_FOLDER_WITH_CMD_AS_ADMIN = "open folder with cmd as admin";
       const OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN = "open folder with powershell as admin";
       const COPY_PATH_TO_CLIPBOARD = "copy path to clipboard";
+      const SEARCH_EVERYTHING = "search everything";
 
       const folderActions: vscode.QuickPickItem[] = [
-        { label: `$(vscode) ${OPEN_FOLDER_WITH_VSCODE}`, alwaysShow: true },
-        { label: `$(folder-opened) ${OPEN_FOLDER_WITH_EXPLORER}`, alwaysShow: true },
-        { label: `$(terminal) ${OPEN_FOLDER_WITH_TERMINAL}`, alwaysShow: true },
-        { label: `$(terminal-cmd) ${OPEN_FOLDER_WITH_CMD}`, alwaysShow: true },
-        { label: `$(shield) ${OPEN_FOLDER_WITH_CMD_AS_ADMIN}`, alwaysShow: true },
-        { label: `$(terminal-powershell) ${OPEN_FOLDER_WITH_POWERSHELL}`, alwaysShow: true },
-        { label: `$(shield) ${OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN}`, alwaysShow: true },
-        { label: `$(clippy) ${COPY_PATH_TO_CLIPBOARD}`, alwaysShow: true },
+        { label: `$(vscode)`, description: OPEN_FOLDER_WITH_VSCODE, alwaysShow: true },
+        { label: `$(folder-opened)`, description: OPEN_FOLDER_WITH_EXPLORER, alwaysShow: true },
+        { label: `$(terminal)`, description: OPEN_FOLDER_WITH_TERMINAL, alwaysShow: true },
+        { label: `$(terminal-cmd)`, description: OPEN_FOLDER_WITH_CMD, alwaysShow: true },
+        { label: `$(shield)`, description: OPEN_FOLDER_WITH_CMD_AS_ADMIN, alwaysShow: true },
+        { label: `$(terminal-powershell)`, description: OPEN_FOLDER_WITH_POWERSHELL, alwaysShow: true },
+        { label: `$(shield)`, description: OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN, alwaysShow: true },
+        { label: `$(clippy)`, description: COPY_PATH_TO_CLIPBOARD, alwaysShow: true },
+        { label: "", kind: vscode.QuickPickItemKind.Separator },
+        { label: `$(search)`, description: SEARCH_EVERYTHING, alwaysShow: true },
       ];
 
       // サブフォルダとファイルがある場合は区切り線を追加してアクションの前に配置
@@ -438,11 +450,17 @@ class EverythingExtension {
       }
 
       const selection = await vscode.window.showQuickPick(allItems, {
-        placeHolder: `${currentFolderPath}`,
+        placeHolder: `folder: ${currentFolderPath}`,
       });
 
       if (!selection) {
         return; // ユーザーがキャンセルした場合はループを抜ける
+      }
+
+      // 検索が選択された場合は現在のパスで検索を実行
+      if (selection.description === SEARCH_EVERYTHING) {
+        await this.searchWithInitialPath(currentFolderPath);
+        return; // 検索後はループを抜ける
       }
 
       // サブフォルダまたは親フォルダが選択された場合は次のフォルダに移動
@@ -459,11 +477,87 @@ class EverythingExtension {
         await this.showFileActions(filePath);
       } else {
         // アクションが選択された場合はアクションを実行してループを抜ける
-        const action = this.getLabelNoIcon(selection.label);
+        const action = selection.description;
         await this.executeFolderAction(action, currentFolderPath);
       }
       break; // ループを抜ける
     }
+  }
+
+  /** search with initial path */
+  private async searchWithInitialPath(initialPath: string) {
+    // init quickpick
+    const config = vscode.workspace.getConfiguration(this.appCfgKey);
+    const quickPick = vscode.window.createQuickPick();
+    quickPick.placeholder = "Type to search ...";
+
+    // init search with folder path
+    const searchValue = initialPath || (await this.context.secrets.get(this.quickPickValueKey)) || "";
+    quickPick.value = searchValue;
+
+    try {
+      quickPick.items = await this.searchEverything(searchValue);
+    } catch (error) {
+      const msg = `error: ${error}, httpServerUrl=${config.httpServerUrl}`;
+      this.channel.appendLine(msg);
+      vscode.window.showErrorMessage(msg);
+      return;
+    }
+
+    // input handler
+    quickPick.onDidChangeValue(async value => {
+      try {
+        if (value.match(/\*/g)) {
+          value = value.replace(/\*/g, "");
+          quickPick.value = value;
+          this.changeSort();
+          return;
+        }
+        await this.context.secrets.store(this.quickPickValueKey, quickPick.value || "");
+        quickPick.items = await this.searchEverything(value);
+      } catch (error) {
+        const msg = `error: ${error}, httpServerUrl=${config.httpServerUrl}`;
+        this.channel.appendLine(msg);
+        vscode.window.showErrorMessage(msg);
+        return;
+      }
+    });
+
+    // accept handler
+    quickPick.onDidAccept(async () => {
+      try {
+        const selectedItem = quickPick.selectedItems[0];
+        if (selectedItem.label.match("result=")) {
+          quickPick.hide();
+          return;
+        }
+        if (selectedItem && selectedItem.label.match(/[\\/]/)) {
+          quickPick.hide();
+          const pathToAny = selectedItem.label;
+          const type = selectedItem.description;
+          const config = vscode.workspace.getConfiguration(this.appCfgKey);
+          if (config.debug) {
+            this.channel.appendLine(`debug: selected='${pathToAny}'`);
+          }
+
+          if (type !== "\\") {
+            // ファイルが選択された場合
+            await this.showFileActions(pathToAny);
+          } else {
+            // フォルダーが選択された場合
+            await this.showFolderNavigation(pathToAny);
+          }
+        }
+      } catch (error) {
+        const msg = `error: ${error}`;
+        this.channel.appendLine(msg);
+        vscode.window.showErrorMessage(msg);
+        return;
+      }
+    });
+
+    // show quickpick
+    quickPick.show();
   }
 }
 export const everythingextension = new EverythingExtension();
