@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.16](https://github.com/taizod1024/vscode-everything-extension/compare/v0.0.15...v0.0.16) (2025-07-26)
+
+
+### Features
+
+* folder navigation ([1a714b7](https://github.com/taizod1024/vscode-everything-extension/commit/1a714b71bd616169f4917139ca3ad0f0f9a346b3))
+* folder navigation ([3e360f5](https://github.com/taizod1024/vscode-everything-extension/commit/3e360f57eeed74bef4140640bee76ec8b799b444))
+
 ### [0.0.15](https://github.com/taizod1024/vscode-everything-extension/compare/v0.0.14...v0.0.15) (2025-07-26)
 
 
