@@ -207,11 +207,6 @@ class EverythingExtension {
     return sort;
   }
 
-  /** runas admin */
-  private async runCmdAsAdmin(pathToAny: string) {
-    let cmdAsAdmin = `powershell -command start-process 'cmd.exe' -argumentlist '/c','powershell','cd ${pathToAny}' -verb runas -wait`;
-  }
-
   /** change sort */
   private async changeSort() {
     const sort = await this.getSort();
