@@ -129,7 +129,7 @@ class EverythingExtension {
             this.channel.appendLine(`debug: selected='${pathToAny}'`);
           }
 
-          if (type !== "\\") {
+          if (type !== path.sep) {
             // ファイルが選択された場合
             await this.showFileActions(pathToAny);
           } else {
@@ -172,7 +172,7 @@ class EverythingExtension {
     var pattern1 = new RegExp('<p class="numresults">([^>]+)</p>', "g");
     var pattern2 = new RegExp('<img class="icon" src="/(file|folder).gif" alt="">([^>]+)</a>.*<nobr>([^>]+)</nobr></span></a></td>', "g");
     const config = vscode.workspace.getConfiguration(this.appCfgKey);
-    const innvertedWord = this.invertPlatformWord(word);
+    const innvertedWord = this.invertPlatformPath(word);
     const search = encodeURIComponent(innvertedWord);
     const sort = await this.getSort();
     const originalUrl = new URL(`?search=${search}&${sort}`, config.httpServerUrl).toString();
@@ -190,7 +190,7 @@ class EverythingExtension {
     const array2 = Array.from(results2).map(result => {
       const originalPath = result[3] + "\\" + result[2];
       const convertedPath = this.convertPlatformPath(originalPath);
-      const type = result[1] === "folder" ? "\\" : "";
+      const type = result[1] === "folder" ? path.sep : "";
       const isFolder = result[1] === "folder";
       return {
         label: convertedPath,
@@ -341,7 +341,7 @@ class EverythingExtension {
     const SEARCH_EVERYTHING = "search everything";
 
     const fileActions: vscode.QuickPickItem[] = [
-      { label: `$(folder) .`, description: "\\" },
+      { label: `$(folder) .`, description: path.sep },
       { label: "", kind: vscode.QuickPickItemKind.Separator },
       { label: `$(vscode)`, description: OPEN_FILE_WITH_VSCODE, alwaysShow: true },
       { label: `$(vscode)`, description: OPEN_FOLDER_WITH_VSCODE, alwaysShow: true },
@@ -373,7 +373,7 @@ class EverythingExtension {
     }
 
     // 同一フォルダが選択された場合はフォルダナビゲーションを表示
-    if (selection.description === "\\" && selection.label.includes(".")) {
+    if (selection.description === path.sep && selection.label.includes(".")) {
       const parentPath = path.dirname(filePath);
       await this.showFolderNavigation(parentPath);
       return;
@@ -402,7 +402,7 @@ class EverythingExtension {
         .filter(item => item.isDirectory())
         .map(folder => ({
           label: `$(file-directory) ${folder.name}`,
-          description: "\\",
+          description: path.sep,
         }));
       return folders;
     } catch (error) {
@@ -443,7 +443,7 @@ class EverythingExtension {
           await fs.promises.access(drive + "\\");
           drives.push({
             label: `$(device-desktop) ${drive}`,
-            description: "\\",
+            description: path.sep,
           });
         } catch (error) {
           // ドライブが存在しない場合は無視
@@ -472,11 +472,13 @@ class EverythingExtension {
       const navigationItems: vscode.QuickPickItem[] = [];
 
       // 空文字（ドライブ一覧）でない場合のみ親フォルダを表示
-      if (currentFolderPath !== "") {
-        navigationItems.push({
-          label: `$(file-directory) ..`,
-          description: "\\",
-        });
+      if ((process.platform == "win32" && currentFolderPath !== "") || (process.platform != "win32" && currentFolderPath != "/")) {
+        if (currentFolderPath !== "") {
+          navigationItems.push({
+            label: `$(file-directory) ..`,
+            description: path.sep,
+          });
+        }
       }
 
       // アクション定義
@@ -536,7 +538,7 @@ class EverythingExtension {
       }
 
       // サブフォルダまたは親フォルダが選択された場合は次のフォルダに移動
-      if (selection.description === "\\") {
+      if (selection.description === path.sep) {
         const label = this.getLabelNoIcon(selection.label);
         if (label === "..") {
           // ルートディレクトリの場合は空文字（ドライブ一覧）に移動
@@ -544,7 +546,7 @@ class EverythingExtension {
           currentFolderPath = isRootDirectory ? "" : parentPath;
         } else if (currentFolderPath === "") {
           // ドライブの場合
-          currentFolderPath = label + "\\";
+          currentFolderPath = label + path.sep;
         } else {
           // サブフォルダの場合
           currentFolderPath = path.join(currentFolderPath, label);
@@ -625,7 +627,7 @@ class EverythingExtension {
             this.channel.appendLine(`debug: selected='${pathToAny}'`);
           }
 
-          if (type !== "\\") {
+          if (type !== path.sep) {
             // ファイルが選択された場合
             await this.showFileActions(pathToAny);
           } else {
@@ -643,37 +645,6 @@ class EverythingExtension {
 
     // show quickpick
     quickPick.show();
-  }
-
-  /**
-   * プラットフォームごとにパスを変換する
-   * @param winPath Windows形式のパス
-   * @returns プラットフォームに合わせたパス
-   */
-  public convertPlatformPath(winPath: string): string {
-    let platformPath: string;
-    // Windowsならそのまま返す
-    if (process.platform === "win32") {
-      platformPath = winPath;
-      return platformPath;
-    }
-    // WSLのUNCパス: \\wsl.localhost\distribution\path → /path
-    const wslMatch = winPath.match(/^\\\\wsl\.localhost\\[^\\]+\\(.+)$/);
-    if (wslMatch) {
-      platformPath = "/" + wslMatch[1].replace(/\\/g, "/");
-      return platformPath;
-    }
-    // C:\path → /mnt/c/path
-    const driveMatch = winPath.match(/^([a-zA-Z]):\\(.+)$/);
-    if (driveMatch) {
-      const drive = driveMatch[1].toLowerCase();
-      const rest = driveMatch[2].replace(/\\/g, "/");
-      platformPath = `/mnt/${drive}/${rest}`;
-      return platformPath;
-    }
-    // それ以外はスラッシュ変換のみ
-    platformPath = winPath.replace(/\\/g, "/");
-    return platformPath;
   }
 
   /**
@@ -702,13 +673,65 @@ class EverythingExtension {
   }
 
   /**
-   * 検索対象を逆変換
+   * プラットフォームごとにパスを変換する
+   * @param winPath Windows形式のパス
+   * @returns プラットフォームに合わせたパス
    */
-  private invertPlatformWord(word: string): string {
-    if (process.platform === "win32" || !this.localhostIp) {
-      return word;
+  public convertPlatformPath(winPath: string): string {
+    // Windowsならそのまま返す
+    if (process.platform === "win32") {
+      const platformPath = winPath;
+      return platformPath;
     }
-    const winPath = word.replace(/\//g, "\\");
+    // WSLのUNCパス: \\wsl.localhost\distribution\path → /path
+    const wslMatch = winPath.match(/^\\\\wsl\.localhost\\[^\\]+\\(.+)$/);
+    if (wslMatch) {
+      const platformPath = "/" + wslMatch[1].replace(/\\/g, "/");
+      return platformPath;
+    }
+    // C:\path → /mnt/c/path
+    const driveMatch = winPath.match(/^([a-zA-Z]):\\(.+)$/);
+    if (driveMatch) {
+      const drive = driveMatch[1].toLowerCase();
+      const rest = driveMatch[2].replace(/\\/g, "/");
+      const platformPath = `/mnt/${drive}/${rest}`;
+      return platformPath;
+    }
+    // それ以外はスラッシュ変換のみ
+    const platformPath = winPath.replace(/\\/g, "/");
+    return platformPath;
+  }
+
+  /**
+   * プラットフォームごとのパスをWindows形式に逆変換する
+   * @param platformPath プラットフォームのパス（例: /mnt/c/Users/foo/bar, /home/foo/bar, /c/Users/foo/bar など）
+   * @returns Windows形式のパス（例: C:\Users\foo\bar）
+   */
+  public invertPlatformPath(platformPath: string): string {
+    // Windowsならそのまま返す
+    if (process.platform === "win32") {
+      const winPath = platformPath;
+      return winPath;
+    }
+    // /mnt/c/Users/foo/bar → C:\Users\foo\bar
+    const mntMatch = platformPath.match(/^\/mnt\/([a-zA-Z])\/(.+)$/);
+    if (mntMatch) {
+      const drive = mntMatch[1].toUpperCase();
+      const rest = mntMatch[2].replace(/\//g, "\\");
+      const winPath = `${drive}:\\${rest}`;
+      return winPath;
+    }
+    // /c/Users/foo/bar → C:\Users\foo\bar
+    const rootDriveMatch = platformPath.match(/^\/([a-zA-Z])\/(.+)$/);
+    if (rootDriveMatch) {
+      const drive = rootDriveMatch[1].toUpperCase();
+      const rest = rootDriveMatch[2].replace(/\//g, "\\");
+      const winPath = `${drive}:\\${rest}`;
+      return winPath;
+    }
+    // /home/foo/bar → \\wsl.localhost\<distro>\home\foo\bar などは未対応（必要なら拡張）
+    // それ以外はスラッシュをバックスラッシュに変換
+    const winPath = platformPath.replace(/\//g, "\\");
     return winPath;
   }
 }
