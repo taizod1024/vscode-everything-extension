@@ -41,7 +41,11 @@ class EverythingExtension {
     this.updatePlatformLocalhostIp();
     this.context = context;
     this.channel.appendLine(`${this.appName}`);
-    this.channel.appendLine(`platform: ${process.platform}`);
+    const config = vscode.workspace.getConfiguration(this.appCfgKey);
+    if (config.debug) {
+      this.channel.appendLine(`debug: platform=${process.platform}`);
+    }
+
     let cmdname = "";
 
     // init command
