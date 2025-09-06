@@ -345,13 +345,17 @@ class EverythingExtension {
       { label: "", kind: vscode.QuickPickItemKind.Separator },
       { label: `$(vscode)`, description: OPEN_FILE_WITH_VSCODE, alwaysShow: true },
       { label: `$(vscode)`, description: OPEN_FOLDER_WITH_VSCODE, alwaysShow: true },
-      { label: `$(folder-opened)`, description: OPEN_FOLDER_WITH_EXPLORER, alwaysShow: true },
+      ...(process.platform === "win32" ? [{ label: `$(folder-opened)`, description: OPEN_FOLDER_WITH_EXPLORER, alwaysShow: true }] : []),
       { label: `$(terminal)`, description: OPEN_FOLDER_WITH_TERMINAL, alwaysShow: true },
-      { label: `$(terminal-cmd)`, description: OPEN_FOLDER_WITH_CMD, alwaysShow: true },
-      { label: `$(shield)`, description: OPEN_FOLDER_WITH_CMD_AS_ADMIN, alwaysShow: true },
-      { label: `$(terminal-powershell)`, description: OPEN_FOLDER_WITH_POWERSHELL, alwaysShow: true },
-      { label: `$(shield)`, description: OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN, alwaysShow: true },
-      { label: `$(link-external)`, description: OPEN_FILE_WITH_DEFAULT_APPLICATION, alwaysShow: true },
+      ...(process.platform === "win32"
+        ? [
+            { label: `$(terminal-cmd)`, description: OPEN_FOLDER_WITH_CMD, alwaysShow: true },
+            { label: `$(shield)`, description: OPEN_FOLDER_WITH_CMD_AS_ADMIN, alwaysShow: true },
+            { label: `$(terminal-powershell)`, description: OPEN_FOLDER_WITH_POWERSHELL, alwaysShow: true },
+            { label: `$(shield)`, description: OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN, alwaysShow: true },
+            { label: `$(link-external)`, description: OPEN_FILE_WITH_DEFAULT_APPLICATION, alwaysShow: true },
+          ]
+        : []),
       { label: `$(clippy)`, description: COPY_PATH_TO_CLIPBOARD, alwaysShow: true },
       { label: "", kind: vscode.QuickPickItemKind.Separator },
       { label: `$(search)`, description: SEARCH_EVERYTHING },
@@ -501,17 +505,21 @@ class EverythingExtension {
         // ドライブ一覧の場合は search アクションのみ表示
         allItems = [...allContents, { label: "", kind: vscode.QuickPickItemKind.Separator }, { label: `$(search)`, description: SEARCH_EVERYTHING, alwaysShow: true }];
       } else {
-        // 通常のフォルダの場合は全てのアクションを表示
+        // 通常のフォルダの場合は全てのアクションを表示（Windowsのみ指定アクションを追加）
         allItems = [
           ...allContents,
           { label: "", kind: vscode.QuickPickItemKind.Separator },
           { label: `$(vscode)`, description: OPEN_FOLDER_WITH_VSCODE, alwaysShow: true },
-          { label: `$(folder-opened)`, description: OPEN_FOLDER_WITH_EXPLORER, alwaysShow: true },
+          ...(process.platform === "win32" ? [{ label: `$(folder-opened)`, description: OPEN_FOLDER_WITH_EXPLORER, alwaysShow: true }] : []),
           { label: `$(terminal)`, description: OPEN_FOLDER_WITH_TERMINAL, alwaysShow: true },
-          { label: `$(terminal-cmd)`, description: OPEN_FOLDER_WITH_CMD, alwaysShow: true },
-          { label: `$(shield)`, description: OPEN_FOLDER_WITH_CMD_AS_ADMIN, alwaysShow: true },
-          { label: `$(terminal-powershell)`, description: OPEN_FOLDER_WITH_POWERSHELL, alwaysShow: true },
-          { label: `$(shield)`, description: OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN, alwaysShow: true },
+          ...(process.platform === "win32"
+            ? [
+                { label: `$(terminal-cmd)`, description: OPEN_FOLDER_WITH_CMD, alwaysShow: true },
+                { label: `$(shield)`, description: OPEN_FOLDER_WITH_CMD_AS_ADMIN, alwaysShow: true },
+                { label: `$(terminal-powershell)`, description: OPEN_FOLDER_WITH_POWERSHELL, alwaysShow: true },
+                { label: `$(shield)`, description: OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN, alwaysShow: true },
+              ]
+            : []),
           { label: `$(clippy)`, description: COPY_PATH_TO_CLIPBOARD, alwaysShow: true },
           { label: "", kind: vscode.QuickPickItemKind.Separator },
           { label: `$(search)`, description: SEARCH_EVERYTHING, alwaysShow: true },
