@@ -9,8 +9,7 @@ Everything を使ってファイルとフォルダを迅速に検索します。
 
 1. [Everything](https://www.voidtools.com/) をインストールします。
 2. Everything の [オプション]-[HTTP サーバ]から[HTTP サーバを有効]をチェックします。
-
-![ee01_ja](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee01_ja.png?raw=true)
+   ![ee01_ja](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee01_ja.png?raw=true)
 
 ## 基本操作
 
@@ -19,10 +18,10 @@ Everything を使ってファイルとフォルダを迅速に検索します。
 1. `Ctrl + Alt + L` を押します。
 2. ファイル名やフォルダ名の一部を入力します。  
     キー入力する毎に Everything で検索した結果を最大 32 項目表示します。  
-    `*`を入力すると表示されている項目の順序が変わります。
+    `*`を入力すると表示されている項目の順序が変わります。  
    ![ee02](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee02.png?raw=true)
 3. Enter キーで項目を選択します。
-4. 選択した項目に対するアクションを選択します。
+4. 選択した項目に対するアクションを選択します。  
    ![ee03](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee03.png?raw=true)
    - ファイルの場合
      - Open file with VS Code
@@ -58,12 +57,11 @@ Everything を使ってファイルとフォルダを迅速に検索します。
 ### Everything の HTTP サーバのポート番号が 80 番以外の場合
 
 Everything の HTTP サーバのポート番号が 80 番以外の場合は、vscode の[設定]から変更します。
-![ee03](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee03.png?raw=true)
+![ee04](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee04.png?raw=true)
 
 ### WSL のファイルを検索する場合の設定
 
 WSL のファイルを検索する場合は、 Everything の [オプション]-[検索データ]-[フォルダ]に`\\wsl.localhost\ディストリビューション名`を追加します。
-![ee04](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee04.png?raw=true)
 
 ### WSL からファイルを検索する場合の設定
 
