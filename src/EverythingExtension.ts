@@ -41,7 +41,11 @@ class EverythingExtension {
     this.updatePlatformLocalhostIp();
     this.context = context;
     this.channel.appendLine(`${this.appName}`);
-    this.channel.appendLine(`platform: ${process.platform}`);
+    const config = vscode.workspace.getConfiguration(this.appCfgKey);
+    if (config.debug) {
+      this.channel.appendLine(`debug: platform=${process.platform}`);
+    }
+
     let cmdname = "";
 
     // init command
@@ -476,7 +480,7 @@ class EverythingExtension {
       const navigationItems: vscode.QuickPickItem[] = [];
 
       // 空文字（ドライブ一覧）でない場合のみ親フォルダを表示
-      if ((process.platform == "win32" && currentFolderPath !== "") || (process.platform != "win32" && currentFolderPath != "/")) {
+      if ((process.platform === "win32" && currentFolderPath !== "") || (process.platform !== "win32" && currentFolderPath !== "/")) {
         if (currentFolderPath !== "") {
           navigationItems.push({
             label: `$(file-directory) ..`,
