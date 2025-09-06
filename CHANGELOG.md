@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.22](https://github.com/taizod1024/vscode-everything-extension/compare/v0.0.21...v0.0.22) (2025-09-06)
+
+
+### Features
+
+* add platform-specific actions for Windows in quickpick menu ([d118788](https://github.com/taizod1024/vscode-everything-extension/commit/d118788b68c3ab29fb745ef8cb244b691b87ed95))
+* add platform-specific path conversion and localhost IP handling ([86c9d33](https://github.com/taizod1024/vscode-everything-extension/commit/86c9d33c4afc13d0b9c3b88590c026be5704f656))
+* update path handling for cross-platform compatibility and add localhost IP management ([f4a59b6](https://github.com/taizod1024/vscode-everything-extension/commit/f4a59b6770ccc3fb9f26f1b645bbe043d3c84774))
+
 ### [0.0.21](https://github.com/taizod1024/vscode-everything-extension/compare/v0.0.20...v0.0.21) (2025-07-26)
 
 ### [0.0.20](https://github.com/taizod1024/vscode-everything-extension/compare/v0.0.19...v0.0.20) (2025-07-26)
