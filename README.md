@@ -56,7 +56,7 @@ Everything を使ってファイルとフォルダを迅速に検索します。
 
 ## 設定
 
-### Everything の HTTP サーバのポート番号が 80 番以外の場合
+### Everything の HTTP サーバのポート番号が 80 番以外の場合の設定
 
 Everything の HTTP サーバのポート番号が 80 番以外の場合は、vscode の[設定]から HTTP サーバの URL を`http://localhost:ポート番号`に変更します。  
 ![ee04](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee04.png?raw=true)
