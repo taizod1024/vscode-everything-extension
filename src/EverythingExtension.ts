@@ -4,6 +4,9 @@ import * as fs from "fs";
 
 /** everything-search-extesnion class */
 class EverythingExtension {
+  /** 非Windows時のlocalhost IPアドレス */
+  private localhostIp: string | undefined;
+
   /** application id for vscode */
   private readonly appId = "everything-extension";
 
@@ -34,8 +37,11 @@ class EverythingExtension {
 
   /** activate extension */
   public activate(context: vscode.ExtensionContext) {
+    // 非Windows時はlocalhost IPを取得
+    this.updatePlatformLocalhostIp();
     this.context = context;
     this.channel.appendLine(`${this.appName}`);
+    this.channel.appendLine(`platform: ${process.platform}`);
     let cmdname = "";
 
     // init command
@@ -162,29 +168,32 @@ class EverythingExtension {
   }
 
   /** search with everything */
-  private async searchEverything(value: string): Promise<vscode.QuickPickItem[]> {
+  private async searchEverything(word: string): Promise<vscode.QuickPickItem[]> {
     var pattern1 = new RegExp('<p class="numresults">([^>]+)</p>', "g");
     var pattern2 = new RegExp('<img class="icon" src="/(file|folder).gif" alt="">([^>]+)</a>.*<nobr>([^>]+)</nobr></span></a></td>', "g");
     const config = vscode.workspace.getConfiguration(this.appCfgKey);
-    const search = encodeURIComponent(value);
+    const innvertedWord = this.invertPlatformWord(word);
+    const search = encodeURIComponent(innvertedWord);
     const sort = await this.getSort();
-    const url = new URL(`?search=${search}&${sort}`, config.httpServerUrl).toString();
-    const response = await fetch(url);
+    const originalUrl = new URL(`?search=${search}&${sort}`, config.httpServerUrl).toString();
+    const convertedUrl = this.convertPlatformUrl(originalUrl);
+    const response = await fetch(convertedUrl);
     const html = await response.text();
     const results1 = html.matchAll(pattern1);
     const results2 = html.matchAll(pattern2);
     const array1 = Array.from(results1).map(result => {
       return {
-        label: `${value}, result=${result[1].replace("　", "")}, ${sort.replace("&", ", ")}`,
+        label: `${word}, result=${result[1].replace("　", "")}, ${sort.replace("&", ", ")}`,
         alwaysShow: true,
       };
     });
     const array2 = Array.from(results2).map(result => {
-      const path = result[3] + "\\" + result[2];
+      const originalPath = result[3] + "\\" + result[2];
+      const convertedPath = this.convertPlatformPath(originalPath);
       const type = result[1] === "folder" ? "\\" : "";
       const isFolder = result[1] === "folder";
       return {
-        label: path,
+        label: convertedPath,
         description: type,
         iconPath: isFolder ? vscode.ThemeIcon.Folder : vscode.ThemeIcon.File,
         alwaysShow: true,
@@ -192,7 +201,7 @@ class EverythingExtension {
     });
     const array = array1.concat(array2);
     if (config.debug) {
-      this.channel.appendLine(`debug: value=${value}, url='${url}, count=${array.length}'`);
+      this.channel.appendLine(`debug: value=${word}, url='${originalUrl}, count=${array.length}'`);
     }
     return array;
   }
@@ -634,6 +643,73 @@ class EverythingExtension {
 
     // show quickpick
     quickPick.show();
+  }
+
+  /**
+   * プラットフォームごとにパスを変換する
+   * @param winPath Windows形式のパス
+   * @returns プラットフォームに合わせたパス
+   */
+  public convertPlatformPath(winPath: string): string {
+    let platformPath: string;
+    // Windowsならそのまま返す
+    if (process.platform === "win32") {
+      platformPath = winPath;
+      return platformPath;
+    }
+    // WSLのUNCパス: \\wsl.localhost\distribution\path → /path
+    const wslMatch = winPath.match(/^\\\\wsl\.localhost\\[^\\]+\\(.+)$/);
+    if (wslMatch) {
+      platformPath = "/" + wslMatch[1].replace(/\\/g, "/");
+      return platformPath;
+    }
+    // C:\path → /mnt/c/path
+    const driveMatch = winPath.match(/^([a-zA-Z]):\\(.+)$/);
+    if (driveMatch) {
+      const drive = driveMatch[1].toLowerCase();
+      const rest = driveMatch[2].replace(/\\/g, "/");
+      platformPath = `/mnt/${drive}/${rest}`;
+      return platformPath;
+    }
+    // それ以外はスラッシュ変換のみ
+    platformPath = winPath.replace(/\\/g, "/");
+    return platformPath;
+  }
+
+  /**
+   * プラットフォームがWindows以外の場合、localhostのIPアドレスを取得して保持
+   */
+  private async updatePlatformLocalhostIp() {
+    if (process.platform !== "win32") {
+      const { execSync } = require("child_process");
+      try {
+        const ip = execSync("ip route | grep default | awk '{print $3}'", { encoding: "utf8" }).trim();
+        this.localhostIp = ip;
+      } catch (e) {
+        this.localhostIp = undefined;
+      }
+    }
+  }
+
+  /**
+   * URLのlocalhost部分をプラットフォームに応じて変換
+   */
+  private convertPlatformUrl(url: string): string {
+    if (process.platform === "win32" || !this.localhostIp) {
+      return url;
+    }
+    return url.replace(/localhost|127\.0\.0\.1/, this.localhostIp);
+  }
+
+  /**
+   * 検索対象を逆変換
+   */
+  private invertPlatformWord(word: string): string {
+    if (process.platform === "win32" || !this.localhostIp) {
+      return word;
+    }
+    const winPath = word.replace(/\//g, "\\");
+    return winPath;
   }
 }
 export const everythingextension = new EverythingExtension();
