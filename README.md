@@ -9,7 +9,7 @@ Everything を使ってファイルとフォルダを迅速に検索します。
 
 1. [Everything](https://www.voidtools.com/) をインストールします。
 2. Everything の [オプション]-[HTTP サーバ]から[HTTP サーバを有効]をチェックします。
-   ![ee01_ja](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee01_ja.png?raw=true)
+   ![ee01](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee01.png?raw=true)
 
 ## 基本操作
 
@@ -56,16 +56,35 @@ Everything を使ってファイルとフォルダを迅速に検索します。
 
 ### Everything の HTTP サーバのポート番号が 80 番以外の場合
 
-Everything の HTTP サーバのポート番号が 80 番以外の場合は、vscode の[設定]から変更します。
+Everything の HTTP サーバのポート番号が 80 番以外の場合は、vscode の[設定]から HTTP サーバの URL を`http://localhost:ポート番号`に変更します。
 ![ee04](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee04.png?raw=true)
 
 ### WSL のファイルを検索する場合の設定
 
 WSL のファイルを検索する場合は、 Everything の [オプション]-[検索データ]-[フォルダ]に`\\wsl.localhost\ディストリビューション名`を追加します。
+![ee05](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee05.png?raw=true)
 
 ### WSL からファイルを検索する場合の設定
 
-WSL からファイルを検索する場合は、Windows ファイアウォールの受信規則を追加します。
+WSL からファイルを検索する場合は、Windows Defender ファイアウォールの受信規則を追加します。
+
+1. 以下の内容で新たに受信規則を作成します。
+   - 規則の種類
+     - ポート番号で規則を作成
+   - プロトコルおよびポート
+     - TCP
+     - 特定のローカルポート：80 もしくは Evertything の HTTP サーバのポート番号
+   - 操作
+     - 接続を許可する
+   - プロファイル
+     - ドメイン
+     - プライベート
+     - パブリック
+   - 名前
+     - 名前：wsl-to-localhost-port-80
+2. 作成した受信規則を開き WSL からのみ接続するよう制限設定します。
+   - スコープタブ
+     - リモート IP アドレス：172.16.0.0/12
 
 # Everything Extension (en)
 
