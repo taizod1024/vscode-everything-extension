@@ -476,7 +476,7 @@ class EverythingExtension {
       const navigationItems: vscode.QuickPickItem[] = [];
 
       // 空文字（ドライブ一覧）でない場合のみ親フォルダを表示
-      if ((process.platform == "win32" && currentFolderPath !== "") || (process.platform != "win32" && currentFolderPath != "/")) {
+      if ((process.platform === "win32" && currentFolderPath !== "") || (process.platform !== "win32" && currentFolderPath !== "/")) {
         if (currentFolderPath !== "") {
           navigationItems.push({
             label: `$(file-directory) ..`,
