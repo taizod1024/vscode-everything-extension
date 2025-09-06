@@ -4,6 +4,9 @@ import * as fs from "fs";
 
 /** everything-search-extesnion class */
 class EverythingExtension {
+  /** 非Windows時のlocalhost IPアドレス */
+  private localhostIp: string | undefined;
+
   /** application id for vscode */
   private readonly appId = "everything-extension";
 
@@ -34,8 +37,11 @@ class EverythingExtension {
 
   /** activate extension */
   public activate(context: vscode.ExtensionContext) {
+    // 非Windows時はlocalhost IPを取得
+    this.updatePlatformLocalhostIp();
     this.context = context;
     this.channel.appendLine(`${this.appName}`);
+    this.channel.appendLine(`platform: ${process.platform}`);
     let cmdname = "";
 
     // init command
@@ -123,7 +129,7 @@ class EverythingExtension {
             this.channel.appendLine(`debug: selected='${pathToAny}'`);
           }
 
-          if (type !== "\\") {
+          if (type !== path.sep) {
             // ファイルが選択された場合
             await this.showFileActions(pathToAny);
           } else {
@@ -162,29 +168,32 @@ class EverythingExtension {
   }
 
   /** search with everything */
-  private async searchEverything(value: string): Promise<vscode.QuickPickItem[]> {
+  private async searchEverything(word: string): Promise<vscode.QuickPickItem[]> {
     var pattern1 = new RegExp('<p class="numresults">([^>]+)</p>', "g");
     var pattern2 = new RegExp('<img class="icon" src="/(file|folder).gif" alt="">([^>]+)</a>.*<nobr>([^>]+)</nobr></span></a></td>', "g");
     const config = vscode.workspace.getConfiguration(this.appCfgKey);
-    const search = encodeURIComponent(value);
+    const innvertedWord = this.invertPlatformPath(word);
+    const search = encodeURIComponent(innvertedWord);
     const sort = await this.getSort();
-    const url = new URL(`?search=${search}&${sort}`, config.httpServerUrl).toString();
-    const response = await fetch(url);
+    const originalUrl = new URL(`?search=${search}&${sort}`, config.httpServerUrl).toString();
+    const convertedUrl = this.convertPlatformUrl(originalUrl);
+    const response = await fetch(convertedUrl);
     const html = await response.text();
     const results1 = html.matchAll(pattern1);
     const results2 = html.matchAll(pattern2);
     const array1 = Array.from(results1).map(result => {
       return {
-        label: `${value}, result=${result[1].replace("　", "")}, ${sort.replace("&", ", ")}`,
+        label: `${word}, result=${result[1].replace("　", "")}, ${sort.replace("&", ", ")}`,
         alwaysShow: true,
       };
     });
     const array2 = Array.from(results2).map(result => {
-      const path = result[3] + "\\" + result[2];
-      const type = result[1] === "folder" ? "\\" : "";
+      const originalPath = result[3] + "\\" + result[2];
+      const convertedPath = this.convertPlatformPath(originalPath);
+      const type = result[1] === "folder" ? path.sep : "";
       const isFolder = result[1] === "folder";
       return {
-        label: path,
+        label: convertedPath,
         description: type,
         iconPath: isFolder ? vscode.ThemeIcon.Folder : vscode.ThemeIcon.File,
         alwaysShow: true,
@@ -192,7 +201,7 @@ class EverythingExtension {
     });
     const array = array1.concat(array2);
     if (config.debug) {
-      this.channel.appendLine(`debug: value=${value}, url='${url}, count=${array.length}'`);
+      this.channel.appendLine(`debug: value=${word}, url='${originalUrl}, count=${array.length}'`);
     }
     return array;
   }
@@ -205,11 +214,6 @@ class EverythingExtension {
       this.channel.appendLine(`debug: sort= ${sort}`);
     }
     return sort;
-  }
-
-  /** runas admin */
-  private async runCmdAsAdmin(pathToAny: string) {
-    let cmdAsAdmin = `powershell -command start-process 'cmd.exe' -argumentlist '/c','powershell','cd ${pathToAny}' -verb runas -wait`;
   }
 
   /** change sort */
@@ -337,17 +341,21 @@ class EverythingExtension {
     const SEARCH_EVERYTHING = "search everything";
 
     const fileActions: vscode.QuickPickItem[] = [
-      { label: `$(folder) .`, description: "\\" },
+      { label: `$(folder) .`, description: path.sep },
       { label: "", kind: vscode.QuickPickItemKind.Separator },
       { label: `$(vscode)`, description: OPEN_FILE_WITH_VSCODE, alwaysShow: true },
       { label: `$(vscode)`, description: OPEN_FOLDER_WITH_VSCODE, alwaysShow: true },
-      { label: `$(folder-opened)`, description: OPEN_FOLDER_WITH_EXPLORER, alwaysShow: true },
+      ...(process.platform === "win32" ? [{ label: `$(folder-opened)`, description: OPEN_FOLDER_WITH_EXPLORER, alwaysShow: true }] : []),
       { label: `$(terminal)`, description: OPEN_FOLDER_WITH_TERMINAL, alwaysShow: true },
-      { label: `$(terminal-cmd)`, description: OPEN_FOLDER_WITH_CMD, alwaysShow: true },
-      { label: `$(shield)`, description: OPEN_FOLDER_WITH_CMD_AS_ADMIN, alwaysShow: true },
-      { label: `$(terminal-powershell)`, description: OPEN_FOLDER_WITH_POWERSHELL, alwaysShow: true },
-      { label: `$(shield)`, description: OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN, alwaysShow: true },
-      { label: `$(link-external)`, description: OPEN_FILE_WITH_DEFAULT_APPLICATION, alwaysShow: true },
+      ...(process.platform === "win32"
+        ? [
+            { label: `$(terminal-cmd)`, description: OPEN_FOLDER_WITH_CMD, alwaysShow: true },
+            { label: `$(shield)`, description: OPEN_FOLDER_WITH_CMD_AS_ADMIN, alwaysShow: true },
+            { label: `$(terminal-powershell)`, description: OPEN_FOLDER_WITH_POWERSHELL, alwaysShow: true },
+            { label: `$(shield)`, description: OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN, alwaysShow: true },
+            { label: `$(link-external)`, description: OPEN_FILE_WITH_DEFAULT_APPLICATION, alwaysShow: true },
+          ]
+        : []),
       { label: `$(clippy)`, description: COPY_PATH_TO_CLIPBOARD, alwaysShow: true },
       { label: "", kind: vscode.QuickPickItemKind.Separator },
       { label: `$(search)`, description: SEARCH_EVERYTHING },
@@ -369,7 +377,7 @@ class EverythingExtension {
     }
 
     // 同一フォルダが選択された場合はフォルダナビゲーションを表示
-    if (selection.description === "\\" && selection.label.includes(".")) {
+    if (selection.description === path.sep && selection.label.includes(".")) {
       const parentPath = path.dirname(filePath);
       await this.showFolderNavigation(parentPath);
       return;
@@ -398,7 +406,7 @@ class EverythingExtension {
         .filter(item => item.isDirectory())
         .map(folder => ({
           label: `$(file-directory) ${folder.name}`,
-          description: "\\",
+          description: path.sep,
         }));
       return folders;
     } catch (error) {
@@ -439,7 +447,7 @@ class EverythingExtension {
           await fs.promises.access(drive + "\\");
           drives.push({
             label: `$(device-desktop) ${drive}`,
-            description: "\\",
+            description: path.sep,
           });
         } catch (error) {
           // ドライブが存在しない場合は無視
@@ -468,11 +476,13 @@ class EverythingExtension {
       const navigationItems: vscode.QuickPickItem[] = [];
 
       // 空文字（ドライブ一覧）でない場合のみ親フォルダを表示
-      if (currentFolderPath !== "") {
-        navigationItems.push({
-          label: `$(file-directory) ..`,
-          description: "\\",
-        });
+      if ((process.platform == "win32" && currentFolderPath !== "") || (process.platform != "win32" && currentFolderPath != "/")) {
+        if (currentFolderPath !== "") {
+          navigationItems.push({
+            label: `$(file-directory) ..`,
+            description: path.sep,
+          });
+        }
       }
 
       // アクション定義
@@ -495,17 +505,21 @@ class EverythingExtension {
         // ドライブ一覧の場合は search アクションのみ表示
         allItems = [...allContents, { label: "", kind: vscode.QuickPickItemKind.Separator }, { label: `$(search)`, description: SEARCH_EVERYTHING, alwaysShow: true }];
       } else {
-        // 通常のフォルダの場合は全てのアクションを表示
+        // 通常のフォルダの場合は全てのアクションを表示（Windowsのみ指定アクションを追加）
         allItems = [
           ...allContents,
           { label: "", kind: vscode.QuickPickItemKind.Separator },
           { label: `$(vscode)`, description: OPEN_FOLDER_WITH_VSCODE, alwaysShow: true },
-          { label: `$(folder-opened)`, description: OPEN_FOLDER_WITH_EXPLORER, alwaysShow: true },
+          ...(process.platform === "win32" ? [{ label: `$(folder-opened)`, description: OPEN_FOLDER_WITH_EXPLORER, alwaysShow: true }] : []),
           { label: `$(terminal)`, description: OPEN_FOLDER_WITH_TERMINAL, alwaysShow: true },
-          { label: `$(terminal-cmd)`, description: OPEN_FOLDER_WITH_CMD, alwaysShow: true },
-          { label: `$(shield)`, description: OPEN_FOLDER_WITH_CMD_AS_ADMIN, alwaysShow: true },
-          { label: `$(terminal-powershell)`, description: OPEN_FOLDER_WITH_POWERSHELL, alwaysShow: true },
-          { label: `$(shield)`, description: OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN, alwaysShow: true },
+          ...(process.platform === "win32"
+            ? [
+                { label: `$(terminal-cmd)`, description: OPEN_FOLDER_WITH_CMD, alwaysShow: true },
+                { label: `$(shield)`, description: OPEN_FOLDER_WITH_CMD_AS_ADMIN, alwaysShow: true },
+                { label: `$(terminal-powershell)`, description: OPEN_FOLDER_WITH_POWERSHELL, alwaysShow: true },
+                { label: `$(shield)`, description: OPEN_FOLDER_WITH_POWERSHELL_AS_ADMIN, alwaysShow: true },
+              ]
+            : []),
           { label: `$(clippy)`, description: COPY_PATH_TO_CLIPBOARD, alwaysShow: true },
           { label: "", kind: vscode.QuickPickItemKind.Separator },
           { label: `$(search)`, description: SEARCH_EVERYTHING, alwaysShow: true },
@@ -532,7 +546,7 @@ class EverythingExtension {
       }
 
       // サブフォルダまたは親フォルダが選択された場合は次のフォルダに移動
-      if (selection.description === "\\") {
+      if (selection.description === path.sep) {
         const label = this.getLabelNoIcon(selection.label);
         if (label === "..") {
           // ルートディレクトリの場合は空文字（ドライブ一覧）に移動
@@ -540,7 +554,7 @@ class EverythingExtension {
           currentFolderPath = isRootDirectory ? "" : parentPath;
         } else if (currentFolderPath === "") {
           // ドライブの場合
-          currentFolderPath = label + "\\";
+          currentFolderPath = label + path.sep;
         } else {
           // サブフォルダの場合
           currentFolderPath = path.join(currentFolderPath, label);
@@ -621,7 +635,7 @@ class EverythingExtension {
             this.channel.appendLine(`debug: selected='${pathToAny}'`);
           }
 
-          if (type !== "\\") {
+          if (type !== path.sep) {
             // ファイルが選択された場合
             await this.showFileActions(pathToAny);
           } else {
@@ -639,6 +653,94 @@ class EverythingExtension {
 
     // show quickpick
     quickPick.show();
+  }
+
+  /**
+   * プラットフォームがWindows以外の場合、localhostのIPアドレスを取得して保持
+   */
+  private async updatePlatformLocalhostIp() {
+    if (process.platform !== "win32") {
+      const { execSync } = require("child_process");
+      try {
+        const ip = execSync("ip route | grep default | awk '{print $3}'", { encoding: "utf8" }).trim();
+        this.localhostIp = ip;
+      } catch (e) {
+        this.localhostIp = undefined;
+      }
+    }
+  }
+
+  /**
+   * URLのlocalhost部分をプラットフォームに応じて変換
+   */
+  private convertPlatformUrl(url: string): string {
+    if (process.platform === "win32" || !this.localhostIp) {
+      return url;
+    }
+    return url.replace(/localhost|127\.0\.0\.1/, this.localhostIp);
+  }
+
+  /**
+   * プラットフォームごとにパスを変換する
+   * @param winPath Windows形式のパス
+   * @returns プラットフォームに合わせたパス
+   */
+  public convertPlatformPath(winPath: string): string {
+    // Windowsならそのまま返す
+    if (process.platform === "win32") {
+      const platformPath = winPath;
+      return platformPath;
+    }
+    // WSLのUNCパス: \\wsl.localhost\distribution\path → /path
+    const wslMatch = winPath.match(/^\\\\wsl\.localhost\\[^\\]+\\(.+)$/);
+    if (wslMatch) {
+      const platformPath = "/" + wslMatch[1].replace(/\\/g, "/");
+      return platformPath;
+    }
+    // C:\path → /mnt/c/path
+    const driveMatch = winPath.match(/^([a-zA-Z]):\\(.+)$/);
+    if (driveMatch) {
+      const drive = driveMatch[1].toLowerCase();
+      const rest = driveMatch[2].replace(/\\/g, "/");
+      const platformPath = `/mnt/${drive}/${rest}`;
+      return platformPath;
+    }
+    // それ以外はスラッシュ変換のみ
+    const platformPath = winPath.replace(/\\/g, "/");
+    return platformPath;
+  }
+
+  /**
+   * プラットフォームごとのパスをWindows形式に逆変換する
+   * @param platformPath プラットフォームのパス（例: /mnt/c/Users/foo/bar, /home/foo/bar, /c/Users/foo/bar など）
+   * @returns Windows形式のパス（例: C:\Users\foo\bar）
+   */
+  public invertPlatformPath(platformPath: string): string {
+    // Windowsならそのまま返す
+    if (process.platform === "win32") {
+      const winPath = platformPath;
+      return winPath;
+    }
+    // /mnt/c/Users/foo/bar → C:\Users\foo\bar
+    const mntMatch = platformPath.match(/^\/mnt\/([a-zA-Z])\/(.+)$/);
+    if (mntMatch) {
+      const drive = mntMatch[1].toUpperCase();
+      const rest = mntMatch[2].replace(/\//g, "\\");
+      const winPath = `${drive}:\\${rest}`;
+      return winPath;
+    }
+    // /c/Users/foo/bar → C:\Users\foo\bar
+    const rootDriveMatch = platformPath.match(/^\/([a-zA-Z])\/(.+)$/);
+    if (rootDriveMatch) {
+      const drive = rootDriveMatch[1].toUpperCase();
+      const rest = rootDriveMatch[2].replace(/\//g, "\\");
+      const winPath = `${drive}:\\${rest}`;
+      return winPath;
+    }
+    // /home/foo/bar → \\wsl.localhost\<distro>\home\foo\bar などは未対応（必要なら拡張）
+    // それ以外はスラッシュをバックスラッシュに変換
+    const winPath = platformPath.replace(/\//g, "\\");
+    return winPath;
   }
 }
 export const everythingextension = new EverythingExtension();
