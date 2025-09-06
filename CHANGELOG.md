@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.23](https://github.com/taizod1024/vscode-everything-extension/compare/v0.0.22...v0.0.23) (2025-09-06)
+
+
+### Features
+
+* add debug logging for platform information in activation ([a098f35](https://github.com/taizod1024/vscode-everything-extension/commit/a098f354a36df1efc7d417e81cdb9bcbd3a2517e))
+
+
+### Bug Fixes
+
+* correct platform check condition for displaying parent folder in navigation ([782d7c5](https://github.com/taizod1024/vscode-everything-extension/commit/782d7c5bcd4951919edfc70d3a54e56d08820f6d))
+
 ### [0.0.22](https://github.com/taizod1024/vscode-everything-extension/compare/v0.0.21...v0.0.22) (2025-09-06)
 
 
