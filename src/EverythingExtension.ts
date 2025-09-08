@@ -116,8 +116,7 @@ class EverythingExtension {
     quickPick.onDidAccept(async () => {
       try {
         const selectedItem = quickPick.selectedItems[0];
-        if (selectedItem.label.match("result=")) {
-          quickPick.hide();
+        if (selectedItem.description !== "" && selectedItem.description !== path.sep) {
           return;
         }
         if (selectedItem && selectedItem.label.match(/[\\/]/)) {
@@ -182,7 +181,8 @@ class EverythingExtension {
     const results2 = html.matchAll(pattern2);
     const array1 = Array.from(results1).map(result => {
       return {
-        label: `${word} , result=${result[1].replace("　", "")}, ${sort.replace("&", ", ")}`,
+        label: word,
+        description: `result=${result[1].replace("　", "")}, ${sort.replace("&", ", ")}`,
         alwaysShow: true,
       };
     });
@@ -621,8 +621,7 @@ class EverythingExtension {
     quickPick.onDidAccept(async () => {
       try {
         const selectedItem = quickPick.selectedItems[0];
-        if (selectedItem.label.match("result=")) {
-          quickPick.hide();
+        if (selectedItem.description !== "" && selectedItem.description !== path.sep) {
           return;
         }
         if (selectedItem && selectedItem.label.match(/[\\/]/)) {
