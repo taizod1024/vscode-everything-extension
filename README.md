@@ -13,7 +13,7 @@ Everything を使ってファイルとフォルダを迅速に検索します。
 2. Everything の [オプション]-[HTTP サーバ]から[HTTP サーバを有効]をチェックします。  
    ![ee01](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee01.png?raw=true)
 
-## 基本操作
+## 操作
 
 ### ファイルやフォルダを検索してアクションを実行
 
@@ -85,7 +85,7 @@ Depending on the settings, you can search for WSL files and also search for file
 1. Install [Everything](https://www.voidtools.com/).
 2. In Everything, go to [Options] - [HTTP Server] and check [Enable HTTP Server].
 
-## Basic Usage
+## Usage
 
 ### Search for files or folders and perform actions
 
