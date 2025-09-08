@@ -182,7 +182,7 @@ class EverythingExtension {
     const results2 = html.matchAll(pattern2);
     const array1 = Array.from(results1).map(result => {
       return {
-        label: `${word}, result=${result[1].replace("　", "")}, ${sort.replace("&", ", ")}`,
+        label: `${word} , result=${result[1].replace("　", "")}, ${sort.replace("&", ", ")}`,
         alwaysShow: true,
       };
     });
