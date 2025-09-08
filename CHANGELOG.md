@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.25](https://github.com/taizod1024/vscode-everything-extension/compare/v0.0.24...v0.0.25) (2025-09-08)
+
+
+### Bug Fixes
+
+* improve clarity in Japanese README regarding WSL file search capabilities ([146052f](https://github.com/taizod1024/vscode-everything-extension/commit/146052f67b7ca3b8adc76a8e968576e369fe0b38))
+* update WSL file search instructions and remove unused localhost IP handling ([799463f](https://github.com/taizod1024/vscode-everything-extension/commit/799463f57162299f11ec17c7940fc9860f00d5ad))
+
 ### [0.0.24](https://github.com/taizod1024/vscode-everything-extension/compare/v0.0.23...v0.0.24) (2025-09-06)
 
 
