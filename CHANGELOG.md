@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.27](https://github.com/taizod1024/vscode-everything-extension/compare/v0.0.26...v0.0.27) (2025-09-08)
+
+
+### Bug Fixes
+
+* improve quick pick item label and description handling for better clarity ([2857297](https://github.com/taizod1024/vscode-everything-extension/commit/285729759b2347a0d1e8c494f776669999f4264a))
+
 ### [0.0.26](https://github.com/taizod1024/vscode-everything-extension/compare/v0.0.25...v0.0.26) (2025-09-08)
 
 
