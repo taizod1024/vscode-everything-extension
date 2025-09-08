@@ -4,9 +4,6 @@ import * as fs from "fs";
 
 /** everything-search-extesnion class */
 class EverythingExtension {
-  /** 非Windows時のlocalhost IPアドレス */
-  private localhostIp: string | undefined;
-
   /** application id for vscode */
   private readonly appId = "everything-extension";
 
@@ -38,7 +35,6 @@ class EverythingExtension {
   /** activate extension */
   public activate(context: vscode.ExtensionContext) {
     // 非Windows時はlocalhost IPを取得
-    this.updatePlatformLocalhostIp();
     this.context = context;
     this.channel.appendLine(`${this.appName}`);
     const config = vscode.workspace.getConfiguration(this.appCfgKey);
@@ -179,9 +175,8 @@ class EverythingExtension {
     const innvertedWord = this.invertPlatformPath(word);
     const search = encodeURIComponent(innvertedWord);
     const sort = await this.getSort();
-    const originalUrl = new URL(`?search=${search}&${sort}`, config.httpServerUrl).toString();
-    const convertedUrl = this.convertPlatformUrl(originalUrl);
-    const response = await fetch(convertedUrl);
+    const url = new URL(`?search=${search}&${sort}`, config.httpServerUrl).toString();
+    const response = await fetch(url);
     const html = await response.text();
     const results1 = html.matchAll(pattern1);
     const results2 = html.matchAll(pattern2);
@@ -205,7 +200,7 @@ class EverythingExtension {
     });
     const array = array1.concat(array2);
     if (config.debug) {
-      this.channel.appendLine(`debug: value=${word}, url='${originalUrl}, count=${array.length}'`);
+      this.channel.appendLine(`debug: value=${word}, url='${url}, count=${array.length}'`);
     }
     return array;
   }
@@ -657,31 +652,6 @@ class EverythingExtension {
 
     // show quickpick
     quickPick.show();
-  }
-
-  /**
-   * プラットフォームがWindows以外の場合、localhostのIPアドレスを取得して保持
-   */
-  private async updatePlatformLocalhostIp() {
-    if (process.platform !== "win32") {
-      const { execSync } = require("child_process");
-      try {
-        const ip = execSync("ip route | grep default | awk '{print $3}'", { encoding: "utf8" }).trim();
-        this.localhostIp = ip;
-      } catch (e) {
-        this.localhostIp = undefined;
-      }
-    }
-  }
-
-  /**
-   * URLのlocalhost部分をプラットフォームに応じて変換
-   */
-  private convertPlatformUrl(url: string): string {
-    if (process.platform === "win32" || !this.localhostIp) {
-      return url;
-    }
-    return url.replace(/localhost|127\.0\.0\.1/, this.localhostIp);
   }
 
   /**

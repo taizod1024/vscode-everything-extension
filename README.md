@@ -68,25 +68,10 @@ WSL のファイルを検索する場合は、 Everything の [オプション]-
 
 ### WSL からファイルを検索する場合の設定
 
-WSL からファイルを検索する場合は、Windows Defender ファイアウォールの受信規則を追加します。
+WSL からファイルを検索する場合は以下の設定をします。
 
-1. 以下の内容で新たに受信規則を作成します。
-   - 規則の種類
-     - ポート番号で規則を作成
-   - プロトコルおよびポート
-     - TCP
-     - 特定のローカルポート：80 もしくは Evertything の HTTP サーバのポート番号
-   - 操作
-     - 接続を許可する
-   - プロファイル
-     - ドメイン
-     - プライベート
-     - パブリック
-   - 名前
-     - 名前：任意、（例）wsl-to-localhost-port-80
-2. 作成した受信規則を開き WSL からのみ接続するよう制限設定します。
-   - スコープタブ
-     - リモート IP アドレス：172.16.0.0/12
+1. WSL Settings を起動して、[ネットワーク]メニューを選択し、[ネットワークモード]を"Mirrored"に変更します。
+2. 変更した場合はコマンドプロンプトから `wsl --shutdown` をして WSL に反映します。
 
 ---
 
@@ -151,22 +136,7 @@ To search for WSL files, add `\\wsl.localhost\<DistributionName>` to [Options] -
 
 ### To search for files from WSL
 
-To search for files from WSL, add an inbound rule to Windows Defender Firewall.
+To search for files from WSL, configure as follows:
 
-1. Create a new inbound rule with the following settings:
-   - Rule Type:
-     - Create a rule for a specific port
-   - Protocol and Ports:
-     - TCP
-     - Specific local port: 80 or the port number of Everything's HTTP server
-   - Action:
-     - Allow the connection
-   - Profile:
-     - Domain
-     - Private
-     - Public
-   - Name:
-     - Name: any (e.g. wsl-to-localhost-port-80)
-2. Open the created rule and restrict it to allow connections only from WSL.
-   - Scope tab:
-     - Remote IP address: 172.16.0.0/12
+1. Open WSL Settings, select the [Network] menu, and change the [Network Mode] to "Mirrored".
+2. If you make changes, run `wsl --shutdown` from the Command Prompt to apply them to WSL.
