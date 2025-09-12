@@ -1,8 +1,8 @@
-[日本語](#everything-extension-ja) | [English](#everything-extension-en)
+[日本語](#everything-search-extension-ja) | [English](#everything-search-extension-en)
 
 ---
 
-# Everything Extension (ja)
+# Everything Search Extension (ja)
 
 Everything を使ってファイルとフォルダを迅速に検索します。  
 設定によっては WSL のファイルの検索、および WSL からファイルの検索も可能です。
@@ -75,7 +75,7 @@ WSL からファイルを検索する場合は以下の設定をします。
 
 ---
 
-# Everything Extension (en)
+# Everything Search Extension (en)
 
 Quickly search for files and folders using Everything.  
 Depending on the settings, you can search for WSL files and also search for files from WSL.
