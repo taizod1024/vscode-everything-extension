@@ -1,8 +1,8 @@
 {
   "version": "0.0.28",
   "name": "everything-extension",
-  "displayName": "Everything Extension",
-  "description": "everything extension for windows",
+  "displayName": "Everything Search Extension",
+  "description": "everything search extension for windows",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -10,7 +10,8 @@
     "Other"
   ],
   "keywords": [
-    "windows"
+    "windows",
+    "search"
   ],
   "publisher": "taizod1024",
   "main": "./build/main.js",
