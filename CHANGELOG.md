@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.29](https://github.com/taizod1024/vscode-everything-extension/compare/v0.0.28...v0.0.29) (2025-09-12)
+
+
+### Bug Fixes
+
+* update display name and description for clarity, and add 'search' keyword ([35af842](https://github.com/taizod1024/vscode-everything-extension/commit/35af8426941f8a2bcb6bc1613d63993cf0bd8ed4))
+
 ### [0.0.28](https://github.com/taizod1024/vscode-everything-extension/compare/v0.0.27...v0.0.28) (2025-09-08)
 
 
