@@ -63,7 +63,7 @@
     "release-premerge": "git switch main && git merge --no-ff develop --no-edit",
     "release-postmerge": "git push --follow-tags origin main && git push origin develop && git switch develop",
     "package": "vsce package",
-    "clean": "rmdir /q /s .\\build || exit /b 0"
+    "clean": "rimraf ./build"
   },
   "author": "yamamoto.taizo <taizod1024@gmail.com>",
   "license": "MIT",
@@ -74,10 +74,8 @@
     "@types/vscode": "^1.90.0",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
-    "bufferutil": "^4.0.5",
     "esbuild": "^0.25.3",
     "eslint": "^8.0.1",
-    "generator-code": "^1.6.2",
     "husky": "^4.3.8",
     "mocha": "^11.1.0",
     "standard-version": "^9.3.2",
@@ -94,8 +92,5 @@
     "hooks": {
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
     }
-  },
-  "dependencies": {
-    "child_process": "^1.0.2"
   }
 }
