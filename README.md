@@ -7,6 +7,8 @@
 Everything を使ってファイルとフォルダを迅速に検索します。  
 設定によっては WSL のファイルの検索、および WSL からファイルの検索も可能です。
 
+![ee00](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee00.gif?raw=true)
+
 ## 準備
 
 1. [Everything](https://www.voidtools.com/) をインストールします。
