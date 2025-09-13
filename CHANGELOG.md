@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.32](https://github.com/taizod1024/vscode-everything-extension/compare/v0.0.31...v0.0.32) (2025-09-13)
+
+
+### Bug Fixes
+
+* update image asset for improved visual quality ([1c63f45](https://github.com/taizod1024/vscode-everything-extension/commit/1c63f4539ad516d60641cc1de4c6dd724d8e5ff5))
+
 ### [0.0.31](https://github.com/taizod1024/vscode-everything-extension/compare/v0.0.30...v0.0.31) (2025-09-12)
 
 ### [0.0.30](https://github.com/taizod1024/vscode-everything-extension/compare/v0.0.29...v0.0.30) (2025-09-12)
