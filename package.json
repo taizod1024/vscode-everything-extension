@@ -1,9 +1,9 @@
 {
-  "version": "0.0.32",
+  "version": "0.0.33",
   "name": "everything-extension",
   "displayName": "Everything Search Extension",
   "description": "everything search extension for windows",
-  "icon" : "icon.png",
+  "icon": "icon.png",
   "engines": {
     "vscode": "^1.90.0"
   },
