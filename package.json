@@ -3,6 +3,7 @@
   "name": "everything-extension",
   "displayName": "Everything Search Extension",
   "description": "everything search extension for windows",
+  "icon" : "icon.png",
   "engines": {
     "vscode": "^1.90.0"
   },
