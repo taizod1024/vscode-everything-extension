@@ -1,12 +1,85 @@
-[日本語](#everything-search-extension-ja) | [English](#everything-search-extension-en)
+[English](#everything-search-extension-en) | [日本語](#everything-search-extension-ja)
+
+---
+
+# Everything Search Extension (en)
+
+Quickly search for files and folders using Everything.  
+Depending on the settings, you can search for WSL files and also search for files from WSL.  
+![ee00](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee00.gif?raw=true)
+
+## Preparation
+
+1. Install [Everything](https://www.voidtools.com/).
+2. In Everything, go to [Options] - [HTTP Server] and check [Enable HTTP Server].  
+   ![ee01_en](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee01_en.png?raw=true)
+
+## Usage
+
+### Search for files or folders and perform actions
+
+1. Press `Ctrl + Alt + L`.
+2. Enter part of the file or folder name.  
+   Up to 32 results from Everything will be displayed as you type.  
+   Entering `*` will change the order of the displayed items.  
+   ![ee02](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee02.png?raw=true)
+3. Select an item with the Enter key.
+4. Choose an action for the selected item.  
+   ![ee03](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee03.png?raw=true)
+   - For files:
+     - Open file with VS Code
+     - Open folder with VS Code
+     - Open folder with Explorer (Windows only)
+     - Open folder with Terminal
+     - Open folder with CMD (Windows only)
+     - Open folder with CMD as administrator (Windows only)
+     - Open folder with PowerShell (Windows only)
+     - Open folder with PowerShell as administrator (Windows only)
+     - Open file with the default application (Windows only)
+     - Copy path to clipboard
+     - Search everything
+   - For folders:
+     - Open folder with VS Code
+     - Open folder with Explorer (Windows only)
+     - Open folder with Terminal
+     - Open folder with CMD (Windows only)
+     - Open folder with CMD as administrator (Windows only)
+     - Open folder with PowerShell (Windows only)
+     - Open folder with PowerShell as administrator (Windows only)
+     - Copy path to clipboard
+     - Search everything
+5. The selected action will be executed.
+
+### Perform actions on the currently opened file
+
+1. With a file open, press `Shift + Alt + L`.
+2. Perform the same actions as for files above.
+
+## Settings
+
+### If the HTTP server port for Everything is not 80
+
+If the HTTP server port for Everything is not 80, change the HTTP server URL in VS Code [Settings] to `http://localhost:<port>`.  
+![ee04](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee04.png?raw=true)
+
+### To search for WSL files
+
+To search for WSL files, add `\\wsl.localhost\<DistributionName>` to [Options] - [Indexes] - [Folders] in Everything.  
+![ee05_en](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee05_en.png?raw=true)
+
+### To search for files from WSL
+
+To search for files from WSL, configure as follows:
+
+1. Open WSL Settings, select the [Network] menu, and change the [Network Mode] to "Mirrored".
+2. If you make changes, run `wsl --shutdown` from the Command Prompt to apply them to WSL.
 
 ---
 
 # Everything Search Extension (ja)
 
 Everything を使ってファイルとフォルダを迅速に検索します。  
-設定によっては WSL のファイルの検索、および WSL からファイルの検索も可能です。
-
+設定によっては WSL のファイルの検索、および WSL からファイルの検索も可能です。  
 ![ee00](https://github.com/taizod1024/vscode-everything-extension/blob/main/images/ee00.gif?raw=true)
 
 ## 準備
@@ -74,71 +147,3 @@ WSL からファイルを検索する場合は以下の設定をします。
 
 1. WSL Settings を起動して、[ネットワーク]メニューを選択し、[ネットワークモード]を"Mirrored"に変更します。
 2. 変更した場合はコマンドプロンプトから `wsl --shutdown` をして WSL に反映します。
-
----
-
-# Everything Search Extension (en)
-
-Quickly search for files and folders using Everything.  
-Depending on the settings, you can search for WSL files and also search for files from WSL.
-
-## Preparation
-
-1. Install [Everything](https://www.voidtools.com/).
-2. In Everything, go to [Options] - [HTTP Server] and check [Enable HTTP Server].
-
-## Usage
-
-### Search for files or folders and perform actions
-
-1. Press `Ctrl + Alt + L`.
-2. Enter part of the file or folder name.  
-   Up to 32 results from Everything will be displayed as you type.  
-   Entering `*` will change the order of the displayed items.
-3. Select an item with the Enter key.
-4. Choose an action for the selected item.
-   - For files:
-     - Open file with VS Code
-     - Open folder with VS Code
-     - Open folder with Explorer (Windows only)
-     - Open folder with Terminal
-     - Open folder with CMD (Windows only)
-     - Open folder with CMD as administrator (Windows only)
-     - Open folder with PowerShell (Windows only)
-     - Open folder with PowerShell as administrator (Windows only)
-     - Open file with the default application (Windows only)
-     - Copy path to clipboard
-     - Search everything
-   - For folders:
-     - Open folder with VS Code
-     - Open folder with Explorer (Windows only)
-     - Open folder with Terminal
-     - Open folder with CMD (Windows only)
-     - Open folder with CMD as administrator (Windows only)
-     - Open folder with PowerShell (Windows only)
-     - Open folder with PowerShell as administrator (Windows only)
-     - Copy path to clipboard
-     - Search everything
-5. The selected action will be executed.
-
-### Perform actions on the currently opened file
-
-1. With a file open, press `Shift + Alt + L`.
-2. Perform the same actions as for files above.
-
-## Settings
-
-### If the HTTP server port for Everything is not 80
-
-If the HTTP server port for Everything is not 80, change the HTTP server URL in VS Code [Settings] to `http://localhost:<port>`.
-
-### To search for WSL files
-
-To search for WSL files, add `\\wsl.localhost\<DistributionName>` to [Options] - [Indexes] - [Folders] in Everything.
-
-### To search for files from WSL
-
-To search for files from WSL, configure as follows:
-
-1. Open WSL Settings, select the [Network] menu, and change the [Network Mode] to "Mirrored".
-2. If you make changes, run `wsl --shutdown` from the Command Prompt to apply them to WSL.
