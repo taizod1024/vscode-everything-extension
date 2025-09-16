@@ -55,6 +55,13 @@ Depending on the settings, you can search for WSL files and also search for file
 1. With a file open, press `Shift + Alt + L`.
 2. Perform the same actions as for files above.
 
+### Create a new Git repository
+
+1. Press `Ctrl + Alt + N`.
+2. Choose whether to create a repository in a new folder or an existing folder.
+3. Follow the prompts to select the location and provide repository details.
+4. The extension will initialize a Git repository with an initial commit, README.md, and .gitignore file.
+
 ## Settings
 
 ### If the HTTP server port for Everything is not 80
@@ -128,6 +135,13 @@ Everything を使ってファイルとフォルダを迅速に検索します。
 
 1. ファイルを開いている状態で`Shift + Alt + L` を押します。
 2. 前述のファイルの場合のアクションを実行します。
+
+### 新しい Git リポジトリを作成
+
+1. `Ctrl + Alt + N` を押します。
+2. 新しいフォルダにリポジトリを作成するか、既存のフォルダにリポジトリを作成するかを選択します。
+3. プロンプトに従って場所を選択し、リポジトリの詳細を入力します。
+4. 拡張機能が初期コミット、README.md、.gitignore ファイルと共に Git リポジトリを初期化します。
 
 ## 設定
 

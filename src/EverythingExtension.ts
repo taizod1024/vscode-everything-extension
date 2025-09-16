@@ -73,6 +73,266 @@ class EverythingExtension {
         }
       })
     );
+
+    // init command for repository creation
+    cmdname = `${this.appId}.createRepository`;
+    context.subscriptions.push(
+      vscode.commands.registerCommand(`${cmdname}`, async () => {
+        try {
+          await this.createRepository();
+        } catch (error) {
+          const msg = `error: ${error}`;
+          this.channel.appendLine(msg);
+          vscode.window.showErrorMessage(msg);
+          return;
+        }
+      })
+    );
+  }
+
+  /** create new repository */
+  private async createRepository() {
+    const config = vscode.workspace.getConfiguration(this.appCfgKey);
+    
+    // Show options for repository creation
+    const CREATE_IN_NEW_FOLDER = "Create in new folder";
+    const CREATE_IN_EXISTING_FOLDER = "Create in existing folder";
+    
+    const creationOptions: vscode.QuickPickItem[] = [
+      { 
+        label: `$(file-directory-create) ${CREATE_IN_NEW_FOLDER}`, 
+        description: CREATE_IN_NEW_FOLDER,
+        detail: "Create a new folder and initialize Git repository"
+      },
+      { 
+        label: `$(folder-opened) ${CREATE_IN_EXISTING_FOLDER}`, 
+        description: CREATE_IN_EXISTING_FOLDER,
+        detail: "Initialize Git repository in existing folder"
+      }
+    ];
+    
+    const selection = await vscode.window.showQuickPick(creationOptions, {
+      placeHolder: "How would you like to create the repository?",
+    });
+    
+    if (!selection) {
+      return;
+    }
+    
+    if (selection.description === CREATE_IN_NEW_FOLDER) {
+      await this.createRepositoryInNewFolder();
+    } else if (selection.description === CREATE_IN_EXISTING_FOLDER) {
+      await this.createRepositoryInExistingFolder();
+    }
+  }
+
+  /** create repository in new folder */
+  private async createRepositoryInNewFolder() {
+    // Get repository name
+    const repositoryName = await vscode.window.showInputBox({
+      prompt: "Enter repository name",
+      placeHolder: "my-new-repository",
+      validateInput: (value) => {
+        if (!value || value.trim() === "") {
+          return "Repository name cannot be empty";
+        }
+        if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
+          return "Repository name can only contain letters, numbers, hyphens, and underscores";
+        }
+        return null;
+      }
+    });
+    
+    if (!repositoryName) {
+      return;
+    }
+    
+    // Select parent folder
+    const parentFolderUri = await vscode.window.showOpenDialog({
+      canSelectFiles: false,
+      canSelectFolders: true,
+      canSelectMany: false,
+      openLabel: "Select parent folder"
+    });
+    
+    if (!parentFolderUri || parentFolderUri.length === 0) {
+      return;
+    }
+    
+    const parentPath = parentFolderUri[0].fsPath;
+    const repositoryPath = path.join(parentPath, repositoryName);
+    
+    try {
+      // Create the folder
+      await fs.promises.mkdir(repositoryPath, { recursive: true });
+      
+      // Initialize Git repository
+      await this.initializeGitRepository(repositoryPath);
+      
+      // Show success message and offer to open the repository
+      const openNow = "Open Now";
+      const openLater = "Open Later";
+      const choice = await vscode.window.showInformationMessage(
+        `Repository '${repositoryName}' created successfully at ${repositoryPath}`,
+        openNow,
+        openLater
+      );
+      
+      if (choice === openNow) {
+        await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(repositoryPath), { forceNewWindow: true });
+      }
+      
+    } catch (error) {
+      vscode.window.showErrorMessage(`Failed to create repository: ${error}`);
+      this.channel.appendLine(`error creating repository: ${error}`);
+    }
+  }
+
+  /** create repository in existing folder */
+  private async createRepositoryInExistingFolder() {
+    // Select existing folder
+    const folderUri = await vscode.window.showOpenDialog({
+      canSelectFiles: false,
+      canSelectFolders: true,
+      canSelectMany: false,
+      openLabel: "Select folder to initialize as Git repository"
+    });
+    
+    if (!folderUri || folderUri.length === 0) {
+      return;
+    }
+    
+    const folderPath = folderUri[0].fsPath;
+    
+    try {
+      // Check if Git repository already exists
+      const gitPath = path.join(folderPath, ".git");
+      try {
+        await fs.promises.access(gitPath);
+        const reinitialize = "Reinitialize";
+        const cancel = "Cancel";
+        const choice = await vscode.window.showWarningMessage(
+          "This folder already contains a Git repository. Do you want to reinitialize it?",
+          reinitialize,
+          cancel
+        );
+        
+        if (choice !== reinitialize) {
+          return;
+        }
+      } catch {
+        // .git doesn't exist, so we can proceed
+      }
+      
+      // Initialize Git repository
+      await this.initializeGitRepository(folderPath);
+      
+      // Show success message and offer to open the repository
+      const openNow = "Open Now";
+      const openLater = "Open Later";
+      const choice = await vscode.window.showInformationMessage(
+        `Git repository initialized successfully in ${folderPath}`,
+        openNow,
+        openLater
+      );
+      
+      if (choice === openNow) {
+        await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(folderPath), { forceNewWindow: true });
+      }
+      
+    } catch (error) {
+      vscode.window.showErrorMessage(`Failed to initialize repository: ${error}`);
+      this.channel.appendLine(`error initializing repository: ${error}`);
+    }
+  }
+
+  /** initialize git repository in the given path */
+  private async initializeGitRepository(repositoryPath: string) {
+    const { exec } = require("child_process");
+    const { promisify } = require("util");
+    const execAsync = promisify(exec);
+    
+    try {
+      // Initialize Git repository
+      await execAsync("git init", { cwd: repositoryPath });
+      
+      // Create initial README.md file
+      const readmePath = path.join(repositoryPath, "README.md");
+      const repositoryName = path.basename(repositoryPath);
+      const readmeContent = `# ${repositoryName}\n\nA new Git repository created with Everything Extension.\n\n## Getting Started\n\nAdd your project files and start coding!\n`;
+      
+      await fs.promises.writeFile(readmePath, readmeContent, "utf8");
+      
+      // Create .gitignore file
+      const gitignorePath = path.join(repositoryPath, ".gitignore");
+      const gitignoreContent = `# Dependencies
+node_modules/
+.npm
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# nyc test coverage
+.nyc_output
+
+# Compiled binary addons (https://nodejs.org/api/addons.html)
+build/Release
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+`;
+      
+      await fs.promises.writeFile(gitignorePath, gitignoreContent, "utf8");
+      
+      // Add initial commit
+      await execAsync("git add .", { cwd: repositoryPath });
+      await execAsync('git commit -m "Initial commit"', { cwd: repositoryPath });
+      
+      this.channel.appendLine(`Git repository initialized at: ${repositoryPath}`);
+      
+    } catch (error) {
+      throw new Error(`Git initialization failed: ${error}`);
+    }
   }
 
   /** search any */

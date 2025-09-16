@@ -25,6 +25,10 @@
       {
         "command": "everything-extension.fileActions",
         "title": "Everything: File Actions"
+      },
+      {
+        "command": "everything-extension.createRepository",
+        "title": "Everything: Create New Repository"
       }
     ],
     "keybindings": [
@@ -35,6 +39,10 @@
       {
         "command": "everything-extension.fileActions",
         "key": "shift+alt+l"
+      },
+      {
+        "command": "everything-extension.createRepository",
+        "key": "ctrl+alt+n"
       }
     ],
     "configuration": [
