@@ -8,7 +8,7 @@ class EverythingExtension {
   private readonly appId = "everything-extension";
 
   /** application name */
-  private readonly appName = "Everything Extension";
+  private readonly appName = "Everything Search Extension";
 
   /** configuration key */
   private readonly appCfgKey = "everythingExtension";
