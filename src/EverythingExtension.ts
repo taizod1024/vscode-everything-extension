@@ -2,13 +2,13 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
 
-/** everything-search-extesnion class */
+/** everything-search-extention class */
 class EverythingExtension {
   /** application id for vscode */
   private readonly appId = "everything-extension";
 
   /** application name */
-  private readonly appName = "Everything Extension";
+  private readonly appName = "Everything Search Extension";
 
   /** configuration key */
   private readonly appCfgKey = "everythingExtension";
@@ -34,7 +34,6 @@ class EverythingExtension {
 
   /** activate extension */
   public activate(context: vscode.ExtensionContext) {
-    // 非Windows時はlocalhost IPを取得
     this.context = context;
     this.channel.appendLine(`${this.appName}`);
     const config = vscode.workspace.getConfiguration(this.appCfgKey);
