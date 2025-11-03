@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0",
+  "prompts": {
+    "default": {
+      "name": "Default Search",
+      "description": "Standard search prompt for Everything",
+      "pattern": "{searchTerm}"
+    },
+    "documents": {
+      "name": "Documents Search",
+      "description": "Search only in document files",
+      "pattern": "{searchTerm} ext:doc;docx;pdf;txt"
+    },
+    "images": {
+      "name": "Images Search",
+      "description": "Search only in image files",
+      "pattern": "{searchTerm} ext:jpg;jpeg;png;gif;bmp"
+    },
+    "code": {
+      "name": "Code Search",
+      "description": "Search only in code files",
+      "pattern": "{searchTerm} ext:js;ts;py;java;cpp;c;h;cs;go"
+    }
+  }
+}
